@@ -1,0 +1,292 @@
+'use client';
+
+import React, { useState } from 'react';
+import { X, Plus, Minus, ShoppingBag, Sparkles, Check, Ruler, Info, ShieldCheck } from 'lucide-react';
+import { CartGarmentItem } from './CartDrawer';
+
+export interface GarmentProduct {
+  id: string;
+  name: string;
+  sku: string;
+  category: string;
+  basePrice: number;
+  fabric: string;
+  craft: string;
+  imageUrl: string;
+  description: string;
+  turnaroundDays?: string;
+  isAvailable?: boolean;
+}
+
+interface Props {
+  item: GarmentProduct | null;
+  onClose: () => void;
+  onAddToCart: (item: CartGarmentItem) => void;
+}
+
+export const ItemModal: React.FC<Props> = ({ item, onClose, onAddToCart }) => {
+  const [selectedSize, setSelectedSize] = useState<string>('M');
+  const [selectedFabric, setSelectedFabric] = useState<string>('');
+  const [selectedCraft, setSelectedCraft] = useState<string>('');
+  const [quantity, setQuantity] = useState<number>(1);
+  const [specialNotes, setSpecialNotes] = useState<string>('');
+  const [showSizeGuide, setShowSizeGuide] = useState<boolean>(false);
+
+  if (!item) return null;
+
+  const currentFabric = selectedFabric || item.fabric;
+  const currentCraft = selectedCraft || item.craft;
+
+  const sizes = [
+    { label: 'XS', bust: '32"', waist: '26"', hip: '36"' },
+    { label: 'S', bust: '34"', waist: '28"', hip: '38"' },
+    { label: 'M', bust: '36"', waist: '30"', hip: '40"' },
+    { label: 'L', bust: '38"', waist: '33"', hip: '43"' },
+    { label: 'XL', bust: '41"', waist: '36"', hip: '46"' },
+    { label: 'XXL', bust: '44"', waist: '39"', hip: '49"' },
+    { label: 'Custom Fit', bust: 'Bespoke', waist: 'Bespoke', hip: 'Bespoke' },
+  ];
+
+  const fabrics = [
+    'Micro Velvet 9000',
+    'Pure Loomed Silk',
+    'Raw Silk 80g',
+    'Chiffon Georgette',
+    'Organza Net',
+  ];
+
+  const crafts = [
+    '24k Metallic Tilla & Antique Zardozi',
+    'Hand-Cut Gotapatti & Resham',
+    'Dabka & Freshwater Pearls',
+    'Fine Thread Shadow Work',
+  ];
+
+  const handleAdd = () => {
+    onAddToCart({
+      id: item.id,
+      name: item.name,
+      sku: item.sku,
+      category: item.category,
+      basePrice: item.basePrice,
+      imageUrl: item.imageUrl,
+      size: selectedSize,
+      fabric: currentFabric,
+      craft: currentCraft,
+      quantity,
+      specialNotes: specialNotes.trim() ? specialNotes : undefined,
+    });
+    onClose();
+  };
+
+  const totalPrice = item.basePrice * quantity;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+      <div className="relative w-full max-w-2xl bg-[#051712] border border-[#C5A059]/40 rounded-3xl overflow-hidden shadow-2xl text-[#FCFBF7] max-h-[90vh] flex flex-col">
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-[#040e0b]/80 border border-[#C5A059]/30 text-gray-400 hover:text-white flex items-center justify-center transition-colors shadow-lg"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        {/* Scrollable Modal Content */}
+        <div className="overflow-y-auto flex-1">
+          {/* Header Image Gallery */}
+          <div className="relative h-64 sm:h-72 w-full bg-[#040e0b]">
+            <img
+              src={item.imageUrl}
+              alt={item.name}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#051712] via-[#051712]/30 to-transparent flex flex-col justify-end p-6">
+              <span className="text-[10px] font-bold uppercase tracking-widest bg-[#C5A059] text-[#051712] px-2.5 py-0.5 rounded-full w-fit">
+                {item.category}
+              </span>
+              <h2 className="font-serif text-2xl sm:text-3xl text-white font-bold mt-1.5">
+                {item.name}
+              </h2>
+              <p className="text-xs text-[#C5A059] font-mono mt-0.5">
+                SKU: {item.sku} &bull; Handcrafted in {item.turnaroundDays || '14 - 28 Days'}
+              </p>
+            </div>
+          </div>
+
+          <div className="p-6 space-y-6">
+            {/* Description */}
+            <p className="text-xs sm:text-sm text-gray-300 leading-relaxed font-sans">
+              {item.description}
+            </p>
+
+            {/* Sizing Selection with Size Guide Trigger */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-xs uppercase font-serif font-bold text-[#C5A059] tracking-wider flex items-center gap-1.5">
+                  <Ruler className="w-4 h-4" /> 1. Choose Size
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowSizeGuide(!showSizeGuide)}
+                  className="text-xs text-[#C5A059] hover:underline flex items-center gap-1 font-serif"
+                >
+                  <Info className="w-3.5 h-3.5" /> {showSizeGuide ? 'Hide Size Chart' : 'View Size Chart (Inches)'}
+                </button>
+              </div>
+
+              {/* Size Matrix Table if Toggled */}
+              {showSizeGuide && (
+                <div className="p-3 bg-[#072A20] rounded-xl border border-[#C5A059]/30 text-xs animate-fadeIn overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-[#C5A059]/20 text-[#C5A059] font-mono text-[11px]">
+                        <th className="py-1.5 px-2">Size</th>
+                        <th className="py-1.5 px-2">Bust</th>
+                        <th className="py-1.5 px-2">Waist</th>
+                        <th className="py-1.5 px-2">Hips</th>
+                        <th className="py-1.5 px-2">Shirt Length</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#C5A059]/10 text-gray-300 font-mono text-[11px]">
+                      <tr><td className="py-1 px-2 font-bold text-white">XS</td><td className="py-1 px-2">32"</td><td className="py-1 px-2">26"</td><td className="py-1 px-2">36"</td><td className="py-1 px-2">48"</td></tr>
+                      <tr><td className="py-1 px-2 font-bold text-white">S</td><td className="py-1 px-2">34"</td><td className="py-1 px-2">28"</td><td className="py-1 px-2">38"</td><td className="py-1 px-2">50"</td></tr>
+                      <tr><td className="py-1 px-2 font-bold text-white">M</td><td className="py-1 px-2">36"</td><td className="py-1 px-2">30"</td><td className="py-1 px-2">40"</td><td className="py-1 px-2">52"</td></tr>
+                      <tr><td className="py-1 px-2 font-bold text-white">L</td><td className="py-1 px-2">38"</td><td className="py-1 px-2">33"</td><td className="py-1 px-2">43"</td><td className="py-1 px-2">54"</td></tr>
+                      <tr><td className="py-1 px-2 font-bold text-white">XL</td><td className="py-1 px-2">41"</td><td className="py-1 px-2">36"</td><td className="py-1 px-2">46"</td><td className="py-1 px-2">55"</td></tr>
+                      <tr><td className="py-1 px-2 font-bold text-white">Custom</td><td className="py-1 px-2 colspan-4 text-[#C5A059]">Custom fitted to your exact size</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Sizing Chips */}
+              <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                {sizes.map((s) => {
+                  const isSelected = selectedSize === s.label;
+                  return (
+                    <button
+                      key={s.label}
+                      type="button"
+                      onClick={() => setSelectedSize(s.label)}
+                      className={`py-2 px-2 rounded-xl text-xs font-serif font-bold text-center border transition-all ${
+                        isSelected
+                          ? 'bg-[#C5A059] text-[#051712] border-[#C5A059] shadow-lg shadow-[#C5A059]/20 scale-105'
+                          : 'bg-[#072A20] text-gray-300 border-[#C5A059]/20 hover:border-[#C5A059]/60 hover:text-white'
+                      }`}
+                    >
+                      <div>{s.label}</div>
+                      <span className="text-[9px] block font-mono font-normal opacity-75">{s.bust}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Base Fabric Swatch Selection */}
+            <div className="space-y-2">
+              <label className="text-xs uppercase font-serif font-bold text-[#C5A059] tracking-wider block">
+                2. Choose Fabric
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {fabrics.map((f) => (
+                  <button
+                    key={f}
+                    type="button"
+                    onClick={() => setSelectedFabric(f)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-serif transition-all border ${
+                      currentFabric === f
+                        ? 'bg-[#C5A059]/20 border-[#C5A059] text-white font-bold'
+                        : 'bg-[#072A20] border-[#C5A059]/20 text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    {f}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Hand-Craft Embellishment */}
+            <div className="space-y-2">
+              <label className="text-xs uppercase font-serif font-bold text-[#C5A059] tracking-wider block">
+                3. Choose Embroidery / Handwork
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {crafts.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setSelectedCraft(c)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-serif transition-all border ${
+                      currentCraft === c
+                        ? 'bg-[#C5A059]/20 border-[#C5A059] text-white font-bold'
+                        : 'bg-[#072A20] border-[#C5A059]/20 text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Special Tailoring Notes */}
+            <div className="space-y-2">
+              <label className="text-xs uppercase font-serif font-bold text-[#C5A059] tracking-wider block">
+                4. Special Instructions (Optional)
+              </label>
+              <textarea
+                rows={2}
+                value={specialNotes}
+                onChange={(e) => setSpecialNotes(e.target.value)}
+                placeholder="Tell us your height, preferred neckline, sleeve length, or any special requests..."
+                className="w-full bg-[#072A20] border border-[#C5A059]/30 rounded-xl p-3 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#C5A059]"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Modal Bottom Bar with Quantity & Add to Cart */}
+        <div className="p-4 sm:p-6 bg-[#072A20] border-t border-[#C5A059]/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center justify-between w-full sm:w-auto gap-6">
+            <div>
+              <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-serif">
+                Price
+              </span>
+              <span className="font-serif font-black text-xl text-[#C5A059] font-mono">
+                PKR {totalPrice.toLocaleString()}
+              </span>
+            </div>
+
+            {/* Quantity Stepper */}
+            <div className="flex items-center gap-2 bg-[#051712] rounded-xl p-1 border border-[#C5A059]/30">
+              <button
+                type="button"
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#072A20]"
+              >
+                <Minus className="w-4 h-4" />
+              </button>
+              <span className="w-6 text-center font-mono font-bold text-sm">{quantity}</span>
+              <button
+                type="button"
+                onClick={() => setQuantity(quantity + 1)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#072A20]"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleAdd}
+            className="w-full sm:w-auto flex-1 max-w-xs py-3.5 px-6 bg-gradient-to-r from-[#C5A059] via-[#dfbc7a] to-amber-600 text-[#051712] font-black text-xs uppercase tracking-widest rounded-xl hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-2 shadow-xl shadow-[#C5A059]/20"
+          >
+            <ShoppingBag className="w-4 h-4 text-[#051712]" />
+            <span>Add to Bag</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
