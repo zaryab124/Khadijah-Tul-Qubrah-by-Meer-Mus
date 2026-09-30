@@ -9,7 +9,10 @@
 export const SUPABASE_CONFIG = {
   url: process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://sijfxilgezxtprswtrmx.supabase.co',
   restUrl: process.env.NEXT_PUBLIC_SUPABASE_REST_URL || 'https://sijfxilgezxtprswtrmx.supabase.co/rest/v1',
-  anonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+  publishableKey:
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    'sb_publishable_ON56k6wJOUcYfcqxXWagNA_I4z-iJYc',
 };
 
 /**
@@ -33,8 +36,8 @@ export async function supabaseRestQuery<T = any>(
 
     const reqHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
-      apikey: SUPABASE_CONFIG.anonKey,
-      Authorization: `Bearer ${SUPABASE_CONFIG.anonKey}`,
+      apikey: SUPABASE_CONFIG.publishableKey,
+      Authorization: `Bearer ${SUPABASE_CONFIG.publishableKey}`,
       ...headers,
     };
 
