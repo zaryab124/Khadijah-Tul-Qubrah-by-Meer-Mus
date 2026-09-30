@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import PortalGuard from '../../components/PortalGuard';
+import { getBackendApiUrl } from '../../lib/api-config';
 import {
   ArrowLeft,
   Palette,
@@ -68,9 +69,9 @@ export default function DesignerStudioPage() {
   const fetchDashboard = async () => {
     setLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
+      const dashboardUrl = getBackendApiUrl('designer/dashboard');
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      const res = await fetch(`${apiUrl}/designer/dashboard`, {
+      const res = await fetch(dashboardUrl, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (res.ok) {
