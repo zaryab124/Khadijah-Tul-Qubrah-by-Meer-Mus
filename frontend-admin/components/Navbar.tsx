@@ -146,46 +146,7 @@ export const Navbar: React.FC<Props> = ({
                 <span>Create Your Own</span>
               </button>
 
-              {/* Department Portals Login Menu */}
-              <div className="hidden xl:flex items-center gap-1 border-l border-r border-[#C5A059]/20 px-2.5">
-                <Link
-                  href="/admin/login"
-                  className="px-2 py-1 rounded-lg text-[11px] font-medium text-[#FCFBF7]/70 hover:text-[#C5A059] hover:bg-[#072A20] flex items-center gap-1 transition-colors"
-                  title="Admin Portal"
-                >
-                  <UserCheck className="w-3 h-3 text-[#C5A059]" /> Admin
-                </Link>
-                <Link
-                  href="/designer/login"
-                  className="px-2 py-1 rounded-lg text-[11px] font-medium text-[#FCFBF7]/70 hover:text-[#C5A059] hover:bg-[#072A20] flex items-center gap-1 transition-colors"
-                  title="Designer Studio"
-                >
-                  <Palette className="w-3 h-3 text-[#E0A96D]" /> Designer
-                </Link>
-                <Link
-                  href="/production/login"
-                  className="px-2 py-1 rounded-lg text-[11px] font-medium text-[#FCFBF7]/70 hover:text-[#C5A059] hover:bg-[#072A20] flex items-center gap-1 transition-colors"
-                  title="Workshop & QC"
-                >
-                  <Scissors className="w-3 h-3 text-[#10B981]" /> Workshop
-                </Link>
-                <Link
-                  href="/agent/login"
-                  className="px-2 py-1 rounded-lg text-[11px] font-medium text-[#FCFBF7]/70 hover:text-[#C5A059] hover:bg-[#072A20] flex items-center gap-1 transition-colors"
-                  title="VIP Concierge CRM"
-                >
-                  <Headphones className="w-3 h-3 text-[#38BDF8]" /> Agent
-                </Link>
-                <Link
-                  href="/login"
-                  className="px-2 py-1 rounded-lg text-[11px] font-bold text-[#C5A059] bg-[#C5A059]/15 hover:bg-[#C5A059]/25 border border-[#C5A059]/40 flex items-center gap-1 transition-colors"
-                  title="Central Gateway"
-                >
-                  <Lock className="w-3 h-3" /> Staff
-                </Link>
-              </div>
-
-              {/* VIP Client Account */}
+              {/* Customer Account */}
               {isAuthenticated && user ? (
                 <div className="relative">
                   <button
@@ -349,51 +310,32 @@ export const Navbar: React.FC<Props> = ({
                 </Link>
               </div>
 
-              {/* Staff Department Portals */}
+              {/* Customer Account & Support */}
               <div className="space-y-1 pt-4 border-t border-[#C5A059]/20">
                 <span className="text-[10px] uppercase font-bold tracking-widest text-[#C5A059] block mb-2 font-mono">
-                  Staff Logins
+                  Customer Account
                 </span>
-                <Link
-                  href="/admin/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#072A20] text-xs"
-                >
-                  <Crown className="w-4 h-4 text-[#C5A059]" />
-                  <span>Owner &amp; Admin</span>
-                </Link>
-                <Link
-                  href="/designer/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#072A20] text-xs"
-                >
-                  <Palette className="w-4 h-4 text-[#E0A96D]" />
-                  <span>Designer Studio</span>
-                </Link>
-                <Link
-                  href="/production/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#072A20] text-xs"
-                >
-                  <Scissors className="w-4 h-4 text-[#10B981]" />
-                  <span>Workshop &amp; Quality Check</span>
-                </Link>
-                <Link
-                  href="/agent/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#072A20] text-xs"
-                >
-                  <Headphones className="w-4 h-4 text-[#38BDF8]" />
-                  <span>Customer Support &amp; CRM</span>
-                </Link>
-                <Link
-                  href="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-3 p-2.5 rounded-xl bg-[#C5A059]/15 border border-[#C5A059]/40 text-xs text-[#C5A059] font-bold"
-                >
-                  <Lock className="w-4 h-4" />
-                  <span>All Staff Logins</span>
-                </Link>
+                {isAuthenticated && user ? (
+                  <button
+                    onClick={() => {
+                      logout();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-red-500/10 text-xs text-red-300 text-left"
+                  >
+                    <LogOut className="w-4 h-4 text-red-400" />
+                    <span>Sign Out ({user.name})</span>
+                  </button>
+                ) : (
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#072A20] text-xs font-semibold text-white"
+                  >
+                    <User className="w-4 h-4 text-[#C5A059]" />
+                    <span>Sign In to Your Account</span>
+                  </Link>
+                )}
               </div>
             </div>
 
@@ -454,8 +396,8 @@ export const Navbar: React.FC<Props> = ({
           href="/login"
           className="flex flex-col items-center gap-1 py-1 px-2 text-center text-gray-400 hover:text-[#C5A059]"
         >
-          <Crown className="w-4 h-4" />
-          <span className="text-[9px] font-serif font-bold uppercase">Staff</span>
+          <User className="w-4 h-4" />
+          <span className="text-[9px] font-serif font-bold uppercase">Account</span>
         </Link>
 
         {onOpenCart && (
