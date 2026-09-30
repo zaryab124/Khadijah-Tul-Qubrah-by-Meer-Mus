@@ -167,17 +167,26 @@ export const Navbar: React.FC<Props> = ({
                         <p className="font-serif font-bold text-white truncate">{user.name}</p>
                         <p className="text-[11px] text-[#FCFBF7]/60 truncate">{user.email}</p>
                         <span className="inline-block mt-1 text-[10px] font-bold text-[#C5A059]">
-                          Role: {user.role}
+                          {user.role === 'CUSTOMER' ? 'Private Client Account' : `Staff Clearance: ${user.role}`}
                         </span>
                       </div>
                       <div className="py-1">
                         <Link
-                          href="/login"
+                          href="/order-tracking/ORD-2026-KTQ"
                           onClick={() => setUserDropdownOpen(false)}
                           className="flex items-center gap-2 px-3 py-1.5 text-gray-300 hover:text-[#C5A059] hover:bg-[#051712] rounded-lg transition-colors"
                         >
-                          <Crown className="w-3.5 h-3.5 text-[#C5A059]" /> Switch Role Portal
+                          <Truck className="w-3.5 h-3.5 text-[#C5A059]" /> My Orders &amp; Tracking
                         </Link>
+                        {user.role !== 'CUSTOMER' && (
+                          <Link
+                            href="/login"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="flex items-center gap-2 px-3 py-1.5 text-gray-300 hover:text-[#C5A059] hover:bg-[#051712] rounded-lg transition-colors"
+                          >
+                            <Crown className="w-3.5 h-3.5 text-[#C5A059]" /> Department Console
+                          </Link>
+                        )}
                       </div>
                       <div className="pt-1 border-t border-[#C5A059]/20">
                         <button

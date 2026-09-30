@@ -264,7 +264,7 @@ export default function OrderTrackingPage({
               </div>
               <div className="py-2.5 flex justify-between">
                 <span className="text-white/60">Packaging</span>
-                <span className="text-emerald-400 font-medium">Signature Gold Gift Box</span>
+                <span className="text-emerald-400 font-medium">Standard Protective Packaging</span>
               </div>
             </div>
           </div>
@@ -280,7 +280,7 @@ export default function OrderTrackingPage({
               </p>
             </div>
 
-            <div className="space-y-2 pt-4 border-t border-[#C5A059]/20">
+            <div className="pt-4 border-t border-[#C5A059]/20">
               <a
                 href="https://wa.me/923000000000"
                 target="_blank"
@@ -289,12 +289,6 @@ export default function OrderTrackingPage({
               >
                 <Phone className="w-4 h-4" /> Chat on WhatsApp
               </a>
-              <Link
-                href="/login"
-                className="w-full py-2 bg-[#051712] hover:bg-[#040e0b] border border-[#C5A059]/40 text-[#C5A059] rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition-all"
-              >
-                Staff Portal Access <ExternalLink className="w-3.5 h-3.5" />
-              </Link>
             </div>
           </div>
         </div>

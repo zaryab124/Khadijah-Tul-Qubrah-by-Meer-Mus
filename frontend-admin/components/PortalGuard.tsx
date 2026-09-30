@@ -228,53 +228,6 @@ export default function PortalGuard({
                 )}
               </button>
             </form>
-
-            {/* Quick Demo Credentials Assistant */}
-            <div className="mt-6 pt-5 border-t border-[#C5A059]/20">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] uppercase tracking-wider text-[#C5A059]/70 font-sans font-semibold">
-                  Demo Department Credentials
-                </span>
-                <span className="text-[10px] text-emerald-400 font-mono">Localhost Ready</span>
-              </div>
-
-              <div className="bg-[#051712]/90 border border-[#C5A059]/20 rounded-xl p-3 text-xs space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[#FCFBF7]/60">Username:</span>
-                  <span className="font-mono text-[#C5A059] font-semibold">{targetDemo.username}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[#FCFBF7]/60">Password:</span>
-                  <span className="font-mono text-[#FCFBF7]/90">{targetDemo.password}</span>
-                </div>
-                <div className="pt-2 flex gap-2">
-                  <button
-                    type="button"
-                    onClick={handleAutofillDemo}
-                    className="flex-1 py-1.5 px-2 bg-[#072A20] hover:bg-[#0a3e30] border border-[#C5A059]/40 rounded text-[11px] text-[#C5A059] transition-all font-sans"
-                  >
-                    Autofill Credentials
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleInstantQuickLogin}
-                    className="flex-1 py-1.5 px-2 bg-[#C5A059]/20 hover:bg-[#C5A059]/30 border border-[#C5A059] rounded text-[11px] text-[#FCFBF7] font-semibold transition-all font-sans flex items-center justify-center gap-1"
-                  >
-                    <Sparkles className="w-3 h-3 text-[#C5A059]" /> 1-Click Access
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Other Portals Switcher */}
-            <div className="mt-5 text-center">
-              <Link
-                href="/login"
-                className="text-xs text-[#C5A059]/80 hover:text-[#C5A059] underline underline-offset-4 transition-colors font-sans"
-              >
-                Browse All Department Portals & Credentials &rarr;
-              </Link>
-            </div>
           </div>
         </main>
 

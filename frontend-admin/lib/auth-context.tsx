@@ -214,7 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return {
       success: false,
-      error: 'Invalid username or password. Please verify your credentials or click a Demo Credential button below.',
+      error: 'Invalid username or password. Please verify your credentials.',
     };
   };
 

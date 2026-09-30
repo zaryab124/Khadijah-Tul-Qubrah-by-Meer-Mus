@@ -23,28 +23,23 @@ import {
 
 export default function MasterLoginPage() {
   const router = useRouter();
-  const { user, isAuthenticated, login, quickLoginAs, logout } = useAuth();
+  const { user, isAuthenticated, login, logout } = useAuth();
 
   const [selectedPortal, setSelectedPortal] = useState<UserRole>('ADMIN');
-  const [username, setUsername] = useState(DEMO_ACCOUNTS.ADMIN.username);
-  const [password, setPassword] = useState(DEMO_ACCOUNTS.ADMIN.password);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleSelectPortal = (role: UserRole) => {
     setSelectedPortal(role);
-    const acc = DEMO_ACCOUNTS[role];
-    if (acc) {
-      setUsername(acc.username);
-      setPassword(acc.password);
-      setErrorMsg(null);
-    }
+    setErrorMsg(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username || !password) {
+    if (!username.trim() || !password) {
       setErrorMsg('Please enter both username and password.');
       return;
     }
@@ -52,7 +47,7 @@ export default function MasterLoginPage() {
     setLoading(true);
     setErrorMsg(null);
 
-    const res = await login(username, password, selectedPortal);
+    const res = await login(username.trim(), password, selectedPortal);
     setLoading(false);
 
     if (res.success) {
@@ -61,12 +56,6 @@ export default function MasterLoginPage() {
     } else {
       setErrorMsg(res.error || 'Authentication failed. Please verify credentials.');
     }
-  };
-
-  const handleDirectLaunch = (role: UserRole) => {
-    quickLoginAs(role);
-    const targetUrl = DEMO_ACCOUNTS[role]?.portalUrl || '/admin';
-    router.push(targetUrl);
   };
 
   const portalsList = [
@@ -80,8 +69,6 @@ export default function MasterLoginPage() {
       badge: '👑 Executive Clearance',
       target: '/admin',
       desc: 'Financial turnover, live sales, garment launches, campaign video ads, RBAC, and audit trail.',
-      user: DEMO_ACCOUNTS.ADMIN.username,
-      pass: DEMO_ACCOUNTS.ADMIN.password,
     },
     {
       role: 'DESIGNER' as UserRole,
@@ -93,8 +80,6 @@ export default function MasterLoginPage() {
       badge: '✂️ Haute Designer',
       target: '/designer',
       desc: 'Custom commission intake, sketch boards, fabric/craft pricing calculator, and multi-version quotes.',
-      user: DEMO_ACCOUNTS.DESIGNER.username,
-      pass: DEMO_ACCOUNTS.DESIGNER.password,
     },
     {
       role: 'PRODUCTION' as UserRole,
@@ -106,8 +91,6 @@ export default function MasterLoginPage() {
       badge: '🧵 Master Craftsman',
       target: '/production',
       desc: 'Workshop job cards, cutting, zardozi embroidery, bespoke tailoring, and Quality Check pass/fail.',
-      user: DEMO_ACCOUNTS.PRODUCTION.username,
-      pass: DEMO_ACCOUNTS.PRODUCTION.password,
     },
     {
       role: 'AGENT' as UserRole,
@@ -119,8 +102,6 @@ export default function MasterLoginPage() {
       badge: '🎧 Client Concierge',
       target: '/agent',
       desc: 'Omnichannel lead pipeline, WhatsApp contact logs, consultation scheduler, and conversion metrics.',
-      user: DEMO_ACCOUNTS.AGENT.username,
-      pass: DEMO_ACCOUNTS.AGENT.password,
     },
     {
       role: 'CUSTOMER' as UserRole,
@@ -132,8 +113,6 @@ export default function MasterLoginPage() {
       badge: '💎 VIP Patron',
       target: '/',
       desc: 'Browse runway collections, watch video campaign deals, Create Your Own bespoke garments, and track orders.',
-      user: DEMO_ACCOUNTS.CUSTOMER.username,
-      pass: DEMO_ACCOUNTS.CUSTOMER.password,
     },
   ];
 
@@ -200,7 +179,7 @@ export default function MasterLoginPage() {
           </p>
 
           <p className="text-xs text-[#FCFBF7]/70 mt-3 font-sans leading-relaxed max-w-lg">
-            Every department operates with strict role-based access control (RBAC). Select a portal below to sign in with designated department credentials or use the 1-click test launcher.
+            Every department operates with strict role-based access control (RBAC). Please enter your verified username and security password to access your department terminal.
           </p>
         </div>
 
@@ -344,10 +323,6 @@ export default function MasterLoginPage() {
                           {p.desc}
                         </p>
 
-                        <div className="mt-2 text-[11px] font-mono text-[#C5A059]/80 flex flex-wrap gap-x-4">
-                          <span>User: <strong className="text-[#FCFBF7]">{p.user}</strong></span>
-                          <span>Pass: <strong className="text-[#FCFBF7]">{p.pass}</strong></span>
-                        </div>
                       </div>
                     </div>
 
@@ -355,16 +330,14 @@ export default function MasterLoginPage() {
                       <button
                         type="button"
                         onClick={() => handleSelectPortal(p.role)}
-                        className="flex-1 sm:flex-initial px-3 py-1.5 bg-[#051712] hover:bg-[#072A20] border border-[#C5A059]/30 rounded text-xs text-[#C5A059] transition-all font-sans"
+                        className={`px-4 py-2 rounded-lg text-xs font-semibold tracking-wider uppercase transition-all flex items-center justify-center gap-1.5 ${
+                          isSelected
+                            ? 'bg-[#C5A059] text-[#051712] shadow'
+                            : 'bg-[#051712] hover:bg-[#072A20] border border-[#C5A059]/30 text-[#C5A059]'
+                        }`}
                       >
-                        Select Credentials
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDirectLaunch(p.role)}
-                        className="flex-1 sm:flex-initial px-3 py-1.5 bg-[#C5A059] hover:bg-[#dfbc7a] text-[#051712] rounded text-xs font-semibold tracking-wider uppercase transition-all flex items-center justify-center gap-1 shadow"
-                      >
-                        <Sparkles className="w-3.5 h-3.5" /> 1-Click Launch
+                        {isSelected ? <CheckCircle2 className="w-3.5 h-3.5" /> : null}
+                        {isSelected ? 'Active Portal' : 'Select Portal'}
                       </button>
                     </div>
                   </div>
