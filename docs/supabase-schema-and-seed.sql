@@ -3,26 +3,24 @@
 -- Haute Couture & Luxury Clothing Atelier - Supabase Database Schema
 -- Project: sijfxilgezxtprswtrmx
 -- =========================================================================
--- This script creates clean, robust, and easy-to-manage tables for:
---   1. products       - Garments with Stitched and Unstitched (Non-Stitched) pricing
---   2. media_gallery  - Boutique gallery photos uploaded/managed by Admin
---   3. orders         - Client orders with stitching preference & tracking
---   4. order_items    - Garment line items (stitched vs unstitched, size, price)
---   5. custom_orders  - Bespoke custom requests & measurements
---
--- HOW TO RUN:
--- 1. Open your Supabase Dashboard: https://supabase.com/dashboard/project/sijfxilgezxtprswtrmx
--- 2. Click on "SQL Editor" in the left sidebar.
--- 3. Paste this entire script and click "Run".
+-- This script safely drops any old incompatible tables and recreates clean,
+-- robust, easy-to-use tables with full Stitched vs. Unstitched workflow support.
 -- =========================================================================
 
--- Enable UUID extension if not already enabled
+-- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Drop old tables if they exist to avoid column mismatch errors
+DROP TABLE IF EXISTS public.order_items CASCADE;
+DROP TABLE IF EXISTS public.products CASCADE;
+DROP TABLE IF EXISTS public.media_gallery CASCADE;
+DROP TABLE IF EXISTS public.orders CASCADE;
+DROP TABLE IF EXISTS public.custom_requests CASCADE;
 
 -- -------------------------------------------------------------------------
 -- 1. PRODUCTS TABLE (with Stitched & Unstitched Pricing Criteria)
 -- -------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS public.products (
+CREATE TABLE public.products (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     sku VARCHAR(64) UNIQUE NOT NULL,
     name VARCHAR(255) NOT NULL,
@@ -44,11 +42,11 @@ CREATE TABLE IF NOT EXISTS public.products (
 -- -------------------------------------------------------------------------
 -- 2. MEDIA GALLERY TABLE (Admin uploaded images for dresses & collections)
 -- -------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS public.media_gallery (
+CREATE TABLE public.media_gallery (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     title VARCHAR(255) NOT NULL,
     image_url TEXT NOT NULL,
-    category VARCHAR(100) DEFAULT 'Bridal',
+    category VARCHAR(100) DEFAULT 'Bridal Couture',
     uploaded_by VARCHAR(100) DEFAULT 'Admin',
     is_featured BOOLEAN DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
@@ -57,7 +55,7 @@ CREATE TABLE IF NOT EXISTS public.media_gallery (
 -- -------------------------------------------------------------------------
 -- 3. ORDERS TABLE (Customer commission orders)
 -- -------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS public.orders (
+CREATE TABLE public.orders (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     order_number VARCHAR(64) UNIQUE NOT NULL,
     customer_name VARCHAR(255) NOT NULL,
@@ -78,7 +76,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
 -- -------------------------------------------------------------------------
 -- 4. ORDER ITEMS TABLE (Individual garments with stitching choice)
 -- -------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS public.order_items (
+CREATE TABLE public.order_items (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     order_id UUID REFERENCES public.orders(id) ON DELETE CASCADE,
     product_id UUID REFERENCES public.products(id) ON DELETE SET NULL,
@@ -97,7 +95,7 @@ CREATE TABLE IF NOT EXISTS public.order_items (
 -- -------------------------------------------------------------------------
 -- 5. CUSTOM DESIGN REQUESTS / COMMISSIONS (Bespoke Studio)
 -- -------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS public.custom_requests (
+CREATE TABLE public.custom_requests (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     request_number VARCHAR(64) UNIQUE NOT NULL,
     customer_name VARCHAR(255) NOT NULL,
@@ -122,61 +120,35 @@ CREATE TABLE IF NOT EXISTS public.custom_requests (
 -- -------------------------------------------------------------------------
 -- ROW LEVEL SECURITY (RLS) POLICIES
 -- -------------------------------------------------------------------------
--- Enable RLS on all tables
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.media_gallery ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.custom_requests ENABLE ROW LEVEL SECURITY;
 
--- 1. Products: Public read, Anon/Admin write
-DROP POLICY IF EXISTS "Public read products" ON public.products;
+-- 1. Products policies (Public can view, Anon/Admin can edit)
 CREATE POLICY "Public read products" ON public.products FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Public insert products" ON public.products;
 CREATE POLICY "Public insert products" ON public.products FOR INSERT WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Public update products" ON public.products;
 CREATE POLICY "Public update products" ON public.products FOR UPDATE USING (true);
-
-DROP POLICY IF EXISTS "Public delete products" ON public.products;
 CREATE POLICY "Public delete products" ON public.products FOR DELETE USING (true);
 
--- 2. Media Gallery: Public read & insert/update
-DROP POLICY IF EXISTS "Public read media_gallery" ON public.media_gallery;
+-- 2. Media Gallery policies
 CREATE POLICY "Public read media_gallery" ON public.media_gallery FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Public insert media_gallery" ON public.media_gallery;
 CREATE POLICY "Public insert media_gallery" ON public.media_gallery FOR INSERT WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Public delete media_gallery" ON public.media_gallery;
 CREATE POLICY "Public delete media_gallery" ON public.media_gallery FOR DELETE USING (true);
 
--- 3. Orders: Public create & read
-DROP POLICY IF EXISTS "Public insert orders" ON public.orders;
+-- 3. Orders policies
 CREATE POLICY "Public insert orders" ON public.orders FOR INSERT WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Public read orders" ON public.orders;
 CREATE POLICY "Public read orders" ON public.orders FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Public update orders" ON public.orders;
 CREATE POLICY "Public update orders" ON public.orders FOR UPDATE USING (true);
 
--- 4. Order Items: Public create & read
-DROP POLICY IF EXISTS "Public insert order_items" ON public.order_items;
+-- 4. Order Items policies
 CREATE POLICY "Public insert order_items" ON public.order_items FOR INSERT WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Public read order_items" ON public.order_items;
 CREATE POLICY "Public read order_items" ON public.order_items FOR SELECT USING (true);
 
--- 5. Custom Requests: Public create, read & update
-DROP POLICY IF EXISTS "Public insert custom_requests" ON public.custom_requests;
+-- 5. Custom Requests policies
 CREATE POLICY "Public insert custom_requests" ON public.custom_requests FOR INSERT WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Public read custom_requests" ON public.custom_requests;
 CREATE POLICY "Public read custom_requests" ON public.custom_requests FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Public update custom_requests" ON public.custom_requests;
 CREATE POLICY "Public update custom_requests" ON public.custom_requests FOR UPDATE USING (true);
 
 -- -------------------------------------------------------------------------
@@ -255,16 +227,7 @@ VALUES
     'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&w=1200&q=80',
     'Dazzling gold tissue saree with scalloped hand-cut embroidered borders. Stitched includes custom blouse stitching and petticoat. Unstitched includes 6.5 meters tissue with blouse piece.',
     '10 - 18 Days'
-)
-ON CONFLICT (sku) DO UPDATE SET
-    unstitched_price = EXCLUDED.unstitched_price,
-    stitched_price = EXCLUDED.stitched_price,
-    name = EXCLUDED.name,
-    category = EXCLUDED.category,
-    fabric = EXCLUDED.fabric,
-    craft = EXCLUDED.craft,
-    image_url = EXCLUDED.image_url,
-    description = EXCLUDED.description;
+);
 
 -- -------------------------------------------------------------------------
 -- SEED MEDIA GALLERY PHOTOS
