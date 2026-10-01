@@ -105,11 +105,24 @@ interface CustomCommission {
 
 export default function HauteCoutureApp() {
   // Authentication Context & Customer Account Modal State
-  const { user, isAuthenticated, login, logout } = useAuth();
+  const { user, isAuthenticated, login, registerCustomer, quickLoginAs, logout } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [authMode, setAuthMode] = useState<'LOGIN' | 'REGISTER'>('LOGIN');
+  const [authMessage, setAuthMessage] = useState<string | null>(null);
+  
+  // Login form state
   const [authUsername, setAuthUsername] = useState<string>('');
   const [authPassword, setAuthPassword] = useState<string>('');
+  
+  // Registration form state
+  const [regName, setRegName] = useState<string>('');
+  const [regEmailOrPhone, setRegEmailOrPhone] = useState<string>('');
+  const [regPassword, setRegPassword] = useState<string>('');
+  const [regCity, setRegCity] = useState<string>('Lahore');
+  const [regAddress, setRegAddress] = useState<string>('');
+
   const [authError, setAuthError] = useState<string | null>(null);
+  const [authSuccess, setAuthSuccess] = useState<string | null>(null);
   const [authSubmitting, setAuthSubmitting] = useState<boolean>(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState<boolean>(false);
 
@@ -294,6 +307,12 @@ export default function HauteCoutureApp() {
 
   // Cart Functions (Integrated with Atelier Cart Drawer)
   const handleAddToCart = (item: CartGarmentItem) => {
+    if (!isAuthenticated) {
+      setAuthMessage('Please sign in or register your VIP customer account to add garments to your bag and select stitching.');
+      setAuthMode('LOGIN');
+      setIsAuthModalOpen(true);
+      return;
+    }
     setCartItems((prev) => {
       const existingIdx = prev.findIndex(
         (ci) => ci.id === item.id && ci.size === item.size && ci.fabric === item.fabric
@@ -306,6 +325,16 @@ export default function HauteCoutureApp() {
       return [...prev, item];
     });
     setIsCartOpen(true);
+  };
+
+  const handleOpenBespoke = () => {
+    if (!isAuthenticated) {
+      setAuthMessage('Please sign in or register your VIP customer account to create your custom bespoke garment.');
+      setAuthMode('LOGIN');
+      setIsAuthModalOpen(true);
+      return;
+    }
+    setIsBespokeModalOpen(true);
   };
 
   const handleUpdateCartQuantity = (index: number, delta: number) => {
@@ -353,6 +382,12 @@ export default function HauteCoutureApp() {
   // Handle Create Your Own Submission
   const handleCustomSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isAuthenticated) {
+      setAuthMessage('Please sign in or register your VIP customer account to submit a custom dress commission.');
+      setAuthMode('LOGIN');
+      setIsAuthModalOpen(true);
+      return;
+    }
     const reqNum = `CDR-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
     const newCommission: CustomCommission = {
       id: `comm-${Date.now()}`,
@@ -414,7 +449,7 @@ export default function HauteCoutureApp() {
         onSelectBranch={(b) => setActiveBranch(b)}
         cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)}
         onOpenCart={() => setIsCartOpen(true)}
-        onOpenBespoke={() => setIsBespokeModalOpen(true)}
+        onOpenBespoke={handleOpenBespoke}
       />
 
       {/* Atelier Physical Salon Fitting Notification (Symmetric Banner) */}
@@ -423,6 +458,60 @@ export default function HauteCoutureApp() {
         <span className="text-[11px] sm:text-xs">
           <strong className="text-[#C5A059] font-bold">Atelier Fitting Active:</strong> {activeBranch.name} &bull; Private Haute Couture Suite #3
         </span>
+      </div>
+
+      {/* VIP Patron Clearance Status & Sign-In Bar */}
+      <div className="bg-[#051712]/95 border-b border-[#C5A059]/25 py-2 px-4 text-xs font-serif shadow-sm">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2.5">
+          {isAuthenticated && user ? (
+            <div className="flex items-center gap-2 text-white">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-emerald-400/40 animate-pulse"></span>
+              <span className="text-[#C5A059] font-bold uppercase tracking-wider text-[11px]">VIP Patron Clearance Active:</span>
+              <span className="font-semibold text-white">{user.name}</span>
+              <span className="text-gray-400 text-[10px] bg-[#072A20] px-2 py-0.5 rounded-full border border-[#C5A059]/20">
+                {user.role === 'CUSTOMER' ? 'Private Client' : `Staff: ${user.role}`}
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-gray-300 text-[11px] sm:text-xs text-center sm:text-left">
+              <Lock className="w-3.5 h-3.5 text-[#C5A059] shrink-0" />
+              <span>
+                <strong className="text-[#C5A059]">Patron Sign-In Notice:</strong> Please sign in or register to configure stitched/unstitched orders and access atelier tracking.
+              </span>
+            </div>
+          )}
+
+          <div className="flex items-center gap-2.5">
+            {isAuthenticated ? (
+              <button
+                onClick={logout}
+                className="text-xs text-red-300 hover:text-red-200 underline font-sans"
+              >
+                Sign Out
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => {
+                    setAuthMode('LOGIN');
+                    setAuthMessage(null);
+                    setAuthError(null);
+                    setIsAuthModalOpen(true);
+                  }}
+                  className="px-3 py-1 rounded-lg bg-[#072A20] border border-[#C5A059]/50 hover:border-[#C5A059] text-[#C5A059] font-bold text-xs uppercase transition-all shadow-sm"
+                >
+                  Sign In
+                </button>
+                <Link
+                  href="/register"
+                  className="px-3 py-1 rounded-lg bg-gradient-to-r from-[#C5A059] to-amber-600 text-[#051712] font-black text-xs uppercase tracking-wider transition-all shadow hover:brightness-110"
+                >
+                  VIP Register Portal &rarr;
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* ========================================================================= */}
@@ -1153,85 +1242,299 @@ export default function HauteCoutureApp() {
       />
 
       {/* ========================================================================= */}
-      {/* 12. VIP CLIENT & PORTAL CREDENTIALS AUTHENTICATION MODAL */}
+      {/* 12. VIP CLIENT & CUSTOMER REGISTRATION / SIGN IN MODAL */}
       {/* ========================================================================= */}
       {isAuthModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="relative w-full max-w-lg rounded-2xl bg-[#072A20] border border-[#C5A059]/40 p-6 md:p-8 shadow-2xl space-y-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+          <div className="relative w-full max-w-lg rounded-2xl bg-[#072A20] border-2 border-[#C5A059]/60 p-6 md:p-8 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
             <button
-              onClick={() => setIsAuthModalOpen(false)}
-              className="absolute top-4 right-4 p-2 rounded-full bg-[#051712] text-gray-400 hover:text-white border border-[#C5A059]/30"
+              onClick={() => {
+                setIsAuthModalOpen(false);
+                setAuthMessage(null);
+                setAuthError(null);
+                setAuthSuccess(null);
+              }}
+              className="absolute top-4 right-4 p-2 rounded-full bg-[#051712] text-gray-400 hover:text-white border border-[#C5A059]/30 transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
 
+            {/* Header & Insignia */}
             <div className="text-center space-y-1.5">
-              <span className="text-[10px] tracking-[0.25em] text-[#C5A059] font-sans font-bold uppercase block">
-                Customer Account
-              </span>
-              <h3 className="text-2xl font-serif text-[#FCFBF7]">
-                Customer Sign In
+              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#C5A059]/15 border border-[#C5A059]/40 text-[#C5A059] text-[10px] font-bold uppercase tracking-widest">
+                <Crown className="w-3 h-3 text-[#C5A059]" /> VIP Patron Clearance
+              </div>
+              <h3 className="text-2xl font-serif font-bold text-[#FCFBF7]">
+                Customer Account Portal
               </h3>
-              <p className="text-xs text-[#FCFBF7]/60">
-                Sign in to check your order status, custom orders, and saved sizes.
+              <p className="text-xs text-[#FCFBF7]/70">
+                Sign in or register to place stitched &amp; unstitched orders and access live atelier tracking.
               </p>
             </div>
 
+            {/* Trigger Message (if prompted by Add to Bag / Checkout / Bespoke) */}
+            {authMessage && (
+              <div className="p-3 rounded-xl bg-[#051712] border border-[#C5A059]/50 text-xs text-[#dfbc7a] flex items-center gap-2">
+                <Lock className="w-4 h-4 text-[#C5A059] shrink-0" />
+                <span>{authMessage}</span>
+              </div>
+            )}
+
+            {/* Error & Success Messages */}
             {authError && (
-              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-xs text-red-300">
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-300">
                 {authError}
               </div>
             )}
 
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                setAuthSubmitting(true);
-                setAuthError(null);
-                const res = await login(authUsername, authPassword, 'CUSTOMER');
-                setAuthSubmitting(false);
-                if (res.success) {
-                  setIsAuthModalOpen(false);
-                } else {
-                  setAuthError(res.error || 'Authentication failed');
-                }
-              }}
-              className="space-y-4"
-            >
-              <div>
-                <label className="block text-[11px] uppercase tracking-wider text-[#C5A059] font-sans font-semibold mb-1">
-                  Username or Email
-                </label>
-                <input
-                  type="text"
-                  value={authUsername}
-                  onChange={(e) => setAuthUsername(e.target.value)}
-                  className="w-full bg-[#051712] border border-[#C5A059]/30 rounded-lg px-3.5 py-2.5 text-sm text-[#FCFBF7] focus:outline-none focus:border-[#C5A059]"
-                />
+            {authSuccess && (
+              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-300 flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>{authSuccess}</span>
               </div>
+            )}
 
-              <div>
-                <label className="block text-[11px] uppercase tracking-wider text-[#C5A059] font-sans font-semibold mb-1">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  value={authPassword}
-                  onChange={(e) => setAuthPassword(e.target.value)}
-                  className="w-full bg-[#051712] border border-[#C5A059]/30 rounded-lg px-3.5 py-2.5 text-sm text-[#FCFBF7] focus:outline-none focus:border-[#C5A059]"
-                />
-              </div>
+            {/* Tab Switcher: Sign In vs Register */}
+            <div className="grid grid-cols-2 p-1 bg-[#051712] rounded-xl border border-[#C5A059]/30 text-xs font-serif font-bold">
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode('LOGIN');
+                  setAuthError(null);
+                }}
+                className={`py-2 rounded-lg transition-all text-center ${
+                  authMode === 'LOGIN'
+                    ? 'bg-[#C5A059] text-[#051712] shadow'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode('REGISTER');
+                  setAuthError(null);
+                }}
+                className={`py-2 rounded-lg transition-all text-center ${
+                  authMode === 'REGISTER'
+                    ? 'bg-[#C5A059] text-[#051712] shadow'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Register Customer
+              </button>
+            </div>
 
-              <div className="pt-2 flex flex-col gap-2">
-                <button
-                  type="submit"
-                  disabled={authSubmitting}
-                  className="w-full py-3 bg-[#C5A059] hover:bg-[#dfbc7a] text-[#051712] font-bold text-xs uppercase tracking-widest rounded-lg transition-all shadow-lg flex items-center justify-center gap-2"
-                >
-                  <User className="w-4 h-4" /> {authSubmitting ? 'Signing In...' : 'Sign In'}
-                </button>
-              </div>
-            </form>
+            {/* Mode 1: Sign In */}
+            {authMode === 'LOGIN' ? (
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setAuthSubmitting(true);
+                  setAuthError(null);
+                  const res = await login(authUsername, authPassword, 'CUSTOMER');
+                  setAuthSubmitting(false);
+                  if (res.success) {
+                    setAuthSuccess('Signed in successfully! Welcome back.');
+                    setTimeout(() => {
+                      setIsAuthModalOpen(false);
+                      setAuthSuccess(null);
+                      setAuthMessage(null);
+                    }, 600);
+                  } else {
+                    setAuthError(res.error || 'Authentication failed. Please verify credentials.');
+                  }
+                }}
+                className="space-y-3.5"
+              >
+                <div>
+                  <label className="block text-[11px] uppercase tracking-wider text-[#C5A059] font-sans font-semibold mb-1">
+                    Phone, Email or Username
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. +92 300 1234567 or customer"
+                    value={authUsername}
+                    onChange={(e) => setAuthUsername(e.target.value)}
+                    className="w-full bg-[#051712] border border-[#C5A059]/30 rounded-xl px-3.5 py-2.5 text-xs text-[#FCFBF7] placeholder-gray-500 focus:outline-none focus:border-[#C5A059]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] uppercase tracking-wider text-[#C5A059] font-sans font-semibold mb-1">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Enter your customer password"
+                    value={authPassword}
+                    onChange={(e) => setAuthPassword(e.target.value)}
+                    className="w-full bg-[#051712] border border-[#C5A059]/30 rounded-xl px-3.5 py-2.5 text-xs text-[#FCFBF7] placeholder-gray-500 focus:outline-none focus:border-[#C5A059]"
+                  />
+                </div>
+
+                <div className="pt-2 flex flex-col gap-2">
+                  <button
+                    type="submit"
+                    disabled={authSubmitting}
+                    className="w-full py-3 bg-gradient-to-r from-[#C5A059] via-[#dfbc7a] to-amber-600 hover:brightness-110 text-[#051712] font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-lg flex items-center justify-center gap-2"
+                  >
+                    <User className="w-4 h-4" /> {authSubmitting ? 'Verifying...' : 'Sign In as Customer'}
+                  </button>
+
+                  {/* Quick Demo Customer Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      quickLoginAs('CUSTOMER');
+                      setAuthSuccess('Signed in as Princess Sara Al-Qasimi (VIP Patron)!');
+                      setTimeout(() => {
+                        setIsAuthModalOpen(false);
+                        setAuthSuccess(null);
+                        setAuthMessage(null);
+                      }, 500);
+                    }}
+                    className="w-full py-2 bg-[#051712] hover:bg-[#093527] border border-[#C5A059]/40 text-[#C5A059] font-serif font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-1.5"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" /> One-Click VIP Demo Customer
+                  </button>
+                </div>
+              </form>
+            ) : (
+              /* Mode 2: Customer Registration */
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!regName.trim() || !regEmailOrPhone.trim() || !regPassword) {
+                    setAuthError('Please complete all required fields.');
+                    return;
+                  }
+                  if (regPassword.length < 6) {
+                    setAuthError('Password must be at least 6 characters.');
+                    return;
+                  }
+
+                  setAuthSubmitting(true);
+                  setAuthError(null);
+                  const res = await registerCustomer(
+                    regName.trim(),
+                    regEmailOrPhone.trim(),
+                    regPassword,
+                    regCity,
+                    regAddress.trim() || undefined
+                  );
+                  setAuthSubmitting(false);
+
+                  if (res.success) {
+                    setAuthSuccess('Account registered & signed in! Welcome to Khadijah-Tul-Qubrah.');
+                    setTimeout(() => {
+                      setIsAuthModalOpen(false);
+                      setAuthSuccess(null);
+                      setAuthMessage(null);
+                    }, 700);
+                  } else {
+                    setAuthError(res.error || 'Failed to complete registration.');
+                  }
+                }}
+                className="space-y-3"
+              >
+                <div>
+                  <label className="block text-[11px] uppercase tracking-wider text-[#C5A059] font-sans font-semibold mb-1">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Ayesha Khan"
+                    value={regName}
+                    onChange={(e) => setRegName(e.target.value)}
+                    className="w-full bg-[#051712] border border-[#C5A059]/30 rounded-xl px-3.5 py-2 text-xs text-[#FCFBF7] placeholder-gray-500 focus:outline-none focus:border-[#C5A059]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="block text-[11px] uppercase tracking-wider text-[#C5A059] font-sans font-semibold mb-1">
+                      WhatsApp / Phone / Email *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="+92 300 0000000"
+                      value={regEmailOrPhone}
+                      onChange={(e) => setRegEmailOrPhone(e.target.value)}
+                      className="w-full bg-[#051712] border border-[#C5A059]/30 rounded-xl px-3.5 py-2 text-xs text-[#FCFBF7] placeholder-gray-500 focus:outline-none focus:border-[#C5A059]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] uppercase tracking-wider text-[#C5A059] font-sans font-semibold mb-1">
+                      City
+                    </label>
+                    <select
+                      value={regCity}
+                      onChange={(e) => setRegCity(e.target.value)}
+                      className="w-full bg-[#051712] border border-[#C5A059]/30 rounded-xl px-3.5 py-2 text-xs text-[#FCFBF7] focus:outline-none focus:border-[#C5A059]"
+                    >
+                      <option value="Lahore">Lahore</option>
+                      <option value="Karachi">Karachi</option>
+                      <option value="Islamabad">Islamabad</option>
+                      <option value="Rawalpindi">Rawalpindi</option>
+                      <option value="Multan">Multan</option>
+                      <option value="Faisalabad">Faisalabad</option>
+                      <option value="Jampur">Jampur (Atelier)</option>
+                      <option value="Dera Ghazi Khan">Dera Ghazi Khan</option>
+                      <option value="International">Overseas Client (UK / USA / UAE)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] uppercase tracking-wider text-[#C5A059] font-sans font-semibold mb-1">
+                    Password (Min 6 chars) *
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="Create a secure password"
+                    value={regPassword}
+                    onChange={(e) => setRegPassword(e.target.value)}
+                    className="w-full bg-[#051712] border border-[#C5A059]/30 rounded-xl px-3.5 py-2 text-xs text-[#FCFBF7] placeholder-gray-500 focus:outline-none focus:border-[#C5A059]"
+                  />
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={authSubmitting}
+                    className="w-full py-3 bg-gradient-to-r from-[#C5A059] via-[#dfbc7a] to-amber-600 hover:brightness-110 text-[#051712] font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-lg flex items-center justify-center gap-2"
+                  >
+                    <Sparkles className="w-4 h-4" /> {authSubmitting ? 'Registering...' : 'Complete Customer Registration'}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Bottom Links */}
+            <div className="pt-3 border-t border-[#C5A059]/20 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-gray-400">
+              <Link
+                href="/register"
+                onClick={() => setIsAuthModalOpen(false)}
+                className="text-[#C5A059] hover:underline flex items-center gap-1 font-semibold"
+              >
+                Full Registration Portal &rarr;
+              </Link>
+              <Link
+                href="/login"
+                onClick={() => setIsAuthModalOpen(false)}
+                className="text-gray-400 hover:text-white flex items-center gap-1"
+              >
+                <Crown className="w-3 h-3 text-[#C5A059]" /> Staff Department Portals &rarr;
+              </Link>
+            </div>
           </div>
         </div>
       )}

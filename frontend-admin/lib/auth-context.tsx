@@ -98,11 +98,22 @@ export const DEMO_ACCOUNTS: Record<string, DemoAccount> = {
   },
 };
 
+export interface RegisteredCustomer {
+  id: string;
+  name: string;
+  emailOrPhone: string;
+  password: string;
+  city?: string;
+  address?: string;
+  createdAt: string;
+}
+
 interface AuthContextType {
   user: UserSession | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (usernameOrEmail: string, password: string, targetRole?: UserRole) => Promise<{ success: boolean; error?: string }>;
+  registerCustomer: (name: string, emailOrPhone: string, password: string, city?: string, address?: string) => Promise<{ success: boolean; error?: string }>;
   quickLoginAs: (role: UserRole) => void;
   logout: () => void;
   hasRole: (roles: UserRole[]) => boolean;
@@ -111,6 +122,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'khadijah_auth_session';
+const REGISTERED_CUSTOMERS_KEY = 'khadijah_registered_customers';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserSession | null>(null);
@@ -217,10 +229,101 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
+    // 3. Verification against locally registered customers
+    try {
+      const regRaw = localStorage.getItem(REGISTERED_CUSTOMERS_KEY);
+      if (regRaw) {
+        const regList: RegisteredCustomer[] = JSON.parse(regRaw);
+        const matched = regList.find(
+          (c) =>
+            (c.emailOrPhone.toLowerCase() === inputIdentifier || c.name.toLowerCase() === inputIdentifier) &&
+            c.password === inputPassword
+        );
+
+        if (matched) {
+          const session: UserSession = {
+            id: matched.id,
+            name: matched.name,
+            email: matched.emailOrPhone.includes('@') ? matched.emailOrPhone : `${matched.emailOrPhone}@customer.pk`,
+            username: matched.name.toLowerCase().replace(/\s+/g, '_'),
+            role: 'CUSTOMER',
+            department: 'Private Client Suite',
+            token: 'mock-jwt-customer-' + Date.now(),
+          };
+          saveUserSession(session);
+          return { success: true };
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading registered customers', e);
+    }
+
     return {
       success: false,
-      error: 'Invalid username or password. Please verify your credentials.',
+      error: 'Invalid username, email, or password. Please verify your credentials or register a new customer account.',
     };
+  };
+
+  const registerCustomer = async (
+    name: string,
+    emailOrPhone: string,
+    password: string,
+    city?: string,
+    address?: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    const cleanName = name.trim();
+    const cleanIdentifier = emailOrPhone.trim().toLowerCase();
+    const cleanPassword = password.trim();
+
+    if (!cleanName || !cleanIdentifier || !cleanPassword) {
+      return { success: false, error: 'Full name, email/phone, and password are required.' };
+    }
+
+    if (cleanPassword.length < 6) {
+      return { success: false, error: 'Password must be at least 6 characters long.' };
+    }
+
+    try {
+      const regRaw = localStorage.getItem(REGISTERED_CUSTOMERS_KEY);
+      const regList: RegisteredCustomer[] = regRaw ? JSON.parse(regRaw) : [];
+
+      // Check if already registered
+      if (regList.some((c) => c.emailOrPhone.toLowerCase() === cleanIdentifier)) {
+        return {
+          success: false,
+          error: 'An account with this email/phone is already registered. Please sign in.',
+        };
+      }
+
+      const newCustomer: RegisteredCustomer = {
+        id: 'cust-' + Date.now(),
+        name: cleanName,
+        emailOrPhone: cleanIdentifier,
+        password: cleanPassword,
+        city: city || 'Lahore',
+        address,
+        createdAt: new Date().toISOString(),
+      };
+
+      regList.push(newCustomer);
+      localStorage.setItem(REGISTERED_CUSTOMERS_KEY, JSON.stringify(regList));
+
+      // Sign the customer in immediately
+      const session: UserSession = {
+        id: newCustomer.id,
+        name: newCustomer.name,
+        email: cleanIdentifier.includes('@') ? cleanIdentifier : `${cleanIdentifier}@customer.pk`,
+        username: cleanName.toLowerCase().replace(/\s+/g, '_'),
+        role: 'CUSTOMER',
+        department: 'Private Client Suite',
+        token: 'mock-jwt-customer-' + Date.now(),
+      };
+
+      saveUserSession(session);
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Failed to complete registration.' };
+    }
   };
 
   const quickLoginAs = (role: UserRole) => {
@@ -255,6 +358,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!user,
         isLoading,
         login,
+        registerCustomer,
         quickLoginAs,
         logout,
         hasRole,

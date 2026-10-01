@@ -204,11 +204,11 @@ export const Navbar: React.FC<Props> = ({
                 </div>
               ) : (
                 <Link
-                  href="/login"
-                  className="hidden sm:flex px-3 py-2 rounded-xl bg-[#051712] hover:bg-[#072A20] text-gray-300 hover:text-white font-bold text-xs items-center gap-1.5 border border-[#C5A059]/30 transition-colors"
+                  href="/register"
+                  className="hidden sm:flex px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#C5A059] to-amber-600 hover:brightness-110 text-[#051712] font-serif font-black text-xs items-center gap-1.5 shadow-md shadow-[#C5A059]/20 transition-all uppercase tracking-wider"
                 >
-                  <User className="w-3.5 h-3.5 text-[#C5A059]" />
-                  <span>Account</span>
+                  <User className="w-3.5 h-3.5 text-[#051712]" />
+                  <span>Sign In / Register</span>
                 </Link>
               )}
 
@@ -337,12 +337,12 @@ export const Navbar: React.FC<Props> = ({
                   </button>
                 ) : (
                   <Link
-                    href="/login"
+                    href="/register"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#072A20] text-xs font-semibold text-white"
+                    className="flex items-center gap-3 p-2.5 rounded-xl bg-gradient-to-r from-[#C5A059]/20 to-amber-600/20 border border-[#C5A059]/50 text-xs font-bold text-[#C5A059]"
                   >
                     <User className="w-4 h-4 text-[#C5A059]" />
-                    <span>Sign In to Your Account</span>
+                    <span>Sign In / Register Customer</span>
                   </Link>
                 )}
               </div>
@@ -402,11 +402,11 @@ export const Navbar: React.FC<Props> = ({
         </Link>
 
         <Link
-          href="/login"
+          href={isAuthenticated ? "/order-tracking/ORD-2026-KTQ" : "/register"}
           className="flex flex-col items-center gap-1 py-1 px-2 text-center text-gray-400 hover:text-[#C5A059]"
         >
           <User className="w-4 h-4" />
-          <span className="text-[9px] font-serif font-bold uppercase">Account</span>
+          <span className="text-[9px] font-serif font-bold uppercase">{isAuthenticated ? 'Account' : 'Sign In'}</span>
         </Link>
 
         {onOpenCart && (

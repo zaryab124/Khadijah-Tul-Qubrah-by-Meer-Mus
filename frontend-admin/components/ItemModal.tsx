@@ -15,8 +15,11 @@ import {
   PackageCheck,
   Clock,
   CheckCircle2,
+  Lock,
+  User,
 } from 'lucide-react';
 import { CartGarmentItem } from './CartDrawer';
+import { useAuth } from '../lib/auth-context';
 
 export interface GarmentProduct {
   id: string;
@@ -42,6 +45,7 @@ interface Props {
 }
 
 export const ItemModal: React.FC<Props> = ({ item, onClose, onAddToCart }) => {
+  const { isAuthenticated } = useAuth();
   const [stitchingOption, setStitchingOption] = useState<'STITCHED' | 'UNSTITCHED'>('STITCHED');
   const [selectedSize, setSelectedSize] = useState<string>('M');
   const [selectedFabric, setSelectedFabric] = useState<string>('');
@@ -398,8 +402,17 @@ export const ItemModal: React.FC<Props> = ({ item, onClose, onAddToCart }) => {
             onClick={handleAdd}
             className="w-full sm:w-auto flex-1 max-w-xs py-3.5 px-6 bg-gradient-to-r from-[#C5A059] via-[#dfbc7a] to-amber-600 text-[#051712] font-black text-xs uppercase tracking-widest rounded-xl hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-2 shadow-xl shadow-[#C5A059]/20"
           >
-            <ShoppingBag className="w-4 h-4 text-[#051712]" />
-            <span>Add to Bag ({stitchingOption === 'STITCHED' ? 'Stitched' : 'Unstitched'})</span>
+            {isAuthenticated ? (
+              <>
+                <ShoppingBag className="w-4 h-4 text-[#051712]" />
+                <span>Add to Bag ({stitchingOption === 'STITCHED' ? 'Stitched' : 'Unstitched'})</span>
+              </>
+            ) : (
+              <>
+                <Lock className="w-4 h-4 text-[#051712]" />
+                <span>Sign In to Order ({stitchingOption === 'STITCHED' ? 'Stitched' : 'Unstitched'})</span>
+              </>
+            )}
           </button>
         </div>
       </div>

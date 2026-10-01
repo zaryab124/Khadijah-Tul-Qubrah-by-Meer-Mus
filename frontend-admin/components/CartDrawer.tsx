@@ -18,7 +18,9 @@ import {
   MapPin,
   CheckCircle2,
 } from 'lucide-react';
+import Link from 'next/link';
 import { submitOrderToSupabase } from '../lib/supabase';
+import { useAuth } from '../lib/auth-context';
 
 export interface CartGarmentItem {
   id: string;
@@ -59,19 +61,27 @@ export const CartDrawer: React.FC<Props> = ({
   activeBranchName = 'Main Boutique (Jampur, Pakistan)',
   onCheckoutSuccess,
 }) => {
+  const { user, isAuthenticated } = useAuth();
   const [promoCode, setPromoCode] = useState('');
   const [discountPercent, setDiscountPercent] = useState<number>(0);
   const [promoMessage, setPromoMessage] = useState<string | null>(null);
 
   // Checkout form modal state
   const [isCheckoutFormOpen, setIsCheckoutFormOpen] = useState(false);
-  const [customerName, setCustomerName] = useState('');
+  const [customerName, setCustomerName] = useState(user?.name || '');
   const [customerPhone, setCustomerPhone] = useState('');
-  const [customerEmail, setCustomerEmail] = useState('');
+  const [customerEmail, setCustomerEmail] = useState(user?.email || '');
   const [shippingAddress, setShippingAddress] = useState('');
   const [city, setCity] = useState('Lahore');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [checkoutCompleteOrder, setCheckoutCompleteOrder] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (user) {
+      if (!customerName) setCustomerName(user.name);
+      if (!customerEmail) setCustomerEmail(user.email);
+    }
+  }, [user]);
 
   if (!isOpen) return null;
 
@@ -442,14 +452,34 @@ export const CartDrawer: React.FC<Props> = ({
                 </div>
               </div>
 
-              {/* Checkout Button */}
-              <button
-                onClick={() => setIsCheckoutFormOpen(true)}
-                className="w-full py-3.5 bg-gradient-to-r from-[#C5A059] via-[#dfbc7a] to-amber-600 text-[#051712] font-black text-xs uppercase tracking-widest rounded-xl hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-2 shadow-xl shadow-[#C5A059]/20"
-              >
-                <span>Proceed to Checkout</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
+              {/* Sign In Enforcement for Checkout */}
+              {!isAuthenticated ? (
+                <div className="p-4 rounded-xl bg-[#051712] border border-[#C5A059]/50 space-y-2.5 text-center">
+                  <div className="flex items-center justify-center gap-1.5 text-xs text-[#C5A059] font-serif font-bold">
+                    <User className="w-4 h-4 text-[#C5A059]" />
+                    <span>Customer Sign-In Required</span>
+                  </div>
+                  <p className="text-[11px] text-gray-300 leading-tight">
+                    Please sign in or create your customer account to confirm your order, secure master karigar slots, and receive your tracking ID.
+                  </p>
+                  <Link
+                    href="/register"
+                    onClick={onClose}
+                    className="w-full py-3 px-4 bg-gradient-to-r from-[#C5A059] via-[#dfbc7a] to-amber-600 text-[#051712] font-black text-xs uppercase tracking-widest rounded-xl hover:brightness-110 flex items-center justify-center gap-2 shadow-lg shadow-[#C5A059]/20 transition-all"
+                  >
+                    <User className="w-4 h-4" />
+                    <span>Sign In / Register Customer</span>
+                  </Link>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsCheckoutFormOpen(true)}
+                  className="w-full py-3.5 bg-gradient-to-r from-[#C5A059] via-[#dfbc7a] to-amber-600 text-[#051712] font-black text-xs uppercase tracking-widest rounded-xl hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-2 shadow-xl shadow-[#C5A059]/20"
+                >
+                  <span>Proceed to Checkout</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              )}
 
               <div className="flex items-center justify-center gap-1.5 text-[10px] text-gray-400">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
