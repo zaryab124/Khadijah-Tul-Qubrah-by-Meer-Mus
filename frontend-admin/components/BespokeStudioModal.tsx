@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Sparkles, Scissors, Palette, Ruler, CheckCircle2, ArrowRight, ArrowLeft, Upload, FileText } from 'lucide-react';
+import { useAuth } from '../lib/auth-context';
 
 interface Props {
   isOpen: boolean;
@@ -14,6 +15,7 @@ export const BespokeStudioModal: React.FC<Props> = ({
   onClose,
   onSubmitCommission,
 }) => {
+  const { user } = useAuth();
   const [step, setStep] = useState<number>(1);
   const [silhouette, setSilhouette] = useState('Bridal Peshwas');
   const [fabric, setFabric] = useState('Micro Velvet 9000');
@@ -28,7 +30,13 @@ export const BespokeStudioModal: React.FC<Props> = ({
     length: '54',
   });
   const [notes, setNotes] = useState('');
-  const [clientName, setClientName] = useState('Princess Sara Al-Qasimi');
+  const [clientName, setClientName] = useState(user?.name || '');
+
+  useEffect(() => {
+    if (user?.name && !clientName) {
+      setClientName(user.name);
+    }
+  }, [user]);
 
   if (!isOpen) return null;
 

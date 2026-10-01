@@ -154,7 +154,7 @@ export default function CustomerRegistrationPortal() {
           </div>
 
           <h1 className="font-serif text-2xl sm:text-3xl text-[#FCFBF7] font-black tracking-wide uppercase">
-            VIP Customer <span className="text-[#C5A059]">Registration &amp; Sign In</span>
+            Customer <span className="text-[#C5A059]">Registration &amp; Sign In</span>
           </h1>
           <p className="text-xs text-[#C5A059] tracking-widest font-serif font-bold uppercase mt-0.5">
             Haute Couture Atelier Client Suite
@@ -405,28 +405,6 @@ export default function CustomerRegistrationPortal() {
                 <Lock className="w-4 h-4 text-[#051712]" />
                 <span>{loading ? 'Authenticating...' : 'Sign In to Client Account'}</span>
               </button>
-
-              {/* 1-Click VIP Demo Login for quick testing */}
-              <div className="pt-4 border-t border-[#C5A059]/20">
-                <span className="text-[10px] text-gray-400 block mb-2 text-center uppercase tracking-wider">
-                  Or instant 1-click VIP test access:
-                </span>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    setLoginIdentifier('customer');
-                    setLoginPassword('CustomerPass2026!');
-                    setLoading(true);
-                    await login('customer', 'CustomerPass2026!', 'CUSTOMER');
-                    setLoading(false);
-                    router.push('/');
-                  }}
-                  className="w-full py-2.5 rounded-xl bg-[#051712] hover:bg-[#0b3d2e] border border-[#C5A059]/40 text-[#C5A059] font-serif font-bold text-xs flex items-center justify-center gap-2 transition-all"
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Continue as VIP Patron (Sara Al-Qasimi)</span>
-                </button>
-              </div>
             </form>
           )}
 

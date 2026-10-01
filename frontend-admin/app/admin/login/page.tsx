@@ -9,18 +9,22 @@ import { useAuth, DEMO_ACCOUNTS } from '@/lib/auth-context';
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const { login, quickLoginAs } = useAuth();
-  const [username, setUsername] = useState(DEMO_ACCOUNTS.ADMIN.username);
-  const [password, setPassword] = useState(DEMO_ACCOUNTS.ADMIN.password);
+  const { login } = useAuth();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!username.trim() || !password) {
+      setError('Please enter both username/email and password.');
+      return;
+    }
     setError(null);
     setLoading(true);
 
-    const res = await login(username, password, 'ADMIN');
+    const res = await login(username.trim(), password, 'ADMIN');
     setLoading(false);
 
     if (res.success) {
@@ -28,11 +32,6 @@ export default function AdminLoginPage() {
     } else {
       setError(res.error || 'Invalid administrator credentials');
     }
-  };
-
-  const handleQuickDemo = () => {
-    quickLoginAs('ADMIN');
-    router.push('/admin');
   };
 
   return (
@@ -92,21 +91,27 @@ export default function AdminLoginPage() {
               />
             </div>
 
+            <div className="p-3 rounded-xl bg-[#051712] border border-[#C5A059]/30 text-[11px] text-gray-300 space-y-1">
+              <span className="text-[#C5A059] font-bold block uppercase tracking-wider font-mono text-[10px]">
+                Authorized Admin Credentials:
+              </span>
+              <div className="flex justify-between font-mono text-[11px]">
+                <span>Username:</span>
+                <strong className="text-white">admin</strong>
+              </div>
+              <div className="flex justify-between font-mono text-[11px]">
+                <span>Password:</span>
+                <strong className="text-white">AdminPassword2026!</strong>
+              </div>
+            </div>
+
             <div className="pt-2 space-y-2">
               <button
                 type="submit"
                 disabled={loading}
                 className="w-full py-3.5 bg-gradient-to-r from-[#C5A059] to-[#dfbc7a] text-[#051712] font-black rounded-xl text-xs uppercase tracking-widest transition-all cursor-pointer shadow-lg shadow-[#C5A059]/20 hover:brightness-110"
               >
-                {loading ? 'Authenticating...' : 'Sign In as Executive Admin'}
-              </button>
-
-              <button
-                type="button"
-                onClick={handleQuickDemo}
-                className="w-full py-2 bg-[#051712] hover:bg-[#0a3e30] border border-[#C5A059]/40 text-[#C5A059] text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-[#C5A059]" /> 1-Click Demo Login (Admin)
+                {loading ? 'Authenticating...' : 'Sign In with Staff Credentials'}
               </button>
             </div>
           </form>

@@ -105,7 +105,7 @@ interface CustomCommission {
 
 export default function HauteCoutureApp() {
   // Authentication Context & Customer Account Modal State
-  const { user, isAuthenticated, login, registerCustomer, quickLoginAs, logout } = useAuth();
+  const { user, isAuthenticated, login, registerCustomer, logout } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [authMode, setAuthMode] = useState<'LOGIN' | 'REGISTER'>('LOGIN');
   const [authMessage, setAuthMessage] = useState<string | null>(null);
@@ -466,17 +466,17 @@ export default function HauteCoutureApp() {
           {isAuthenticated && user ? (
             <div className="flex items-center gap-2 text-white">
               <span className="w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-emerald-400/40 animate-pulse"></span>
-              <span className="text-[#C5A059] font-bold uppercase tracking-wider text-[11px]">VIP Patron Clearance Active:</span>
+              <span className="text-[#C5A059] font-bold uppercase tracking-wider text-[11px]">Active Client Session:</span>
               <span className="font-semibold text-white">{user.name}</span>
               <span className="text-gray-400 text-[10px] bg-[#072A20] px-2 py-0.5 rounded-full border border-[#C5A059]/20">
-                {user.role === 'CUSTOMER' ? 'Private Client' : `Staff: ${user.role}`}
+                {user.role === 'CUSTOMER' ? 'Customer' : `Staff (${user.role})`}
               </span>
             </div>
           ) : (
             <div className="flex items-center gap-2 text-gray-300 text-[11px] sm:text-xs text-center sm:text-left">
               <Lock className="w-3.5 h-3.5 text-[#C5A059] shrink-0" />
               <span>
-                <strong className="text-[#C5A059]">Patron Sign-In Notice:</strong> Please sign in or register to configure stitched/unstitched orders and access atelier tracking.
+                <strong className="text-[#C5A059]">Client Authentication:</strong> Please sign in with your username/password or register a new customer account to place orders.
               </span>
             </div>
           )}
@@ -506,7 +506,7 @@ export default function HauteCoutureApp() {
                   href="/register"
                   className="px-3 py-1 rounded-lg bg-gradient-to-r from-[#C5A059] to-amber-600 text-[#051712] font-black text-xs uppercase tracking-wider transition-all shadow hover:brightness-110"
                 >
-                  VIP Register Portal &rarr;
+                  Register Customer &rarr;
                 </Link>
               </>
             )}
@@ -1262,7 +1262,7 @@ export default function HauteCoutureApp() {
             {/* Header & Insignia */}
             <div className="text-center space-y-1.5">
               <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#C5A059]/15 border border-[#C5A059]/40 text-[#C5A059] text-[10px] font-bold uppercase tracking-widest">
-                <Crown className="w-3 h-3 text-[#C5A059]" /> VIP Patron Clearance
+                <User className="w-3 h-3 text-[#C5A059]" /> Customer Account Access
               </div>
               <h3 className="text-2xl font-serif font-bold text-[#FCFBF7]">
                 Customer Account Portal
@@ -1383,23 +1383,6 @@ export default function HauteCoutureApp() {
                     className="w-full py-3 bg-gradient-to-r from-[#C5A059] via-[#dfbc7a] to-amber-600 hover:brightness-110 text-[#051712] font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-lg flex items-center justify-center gap-2"
                   >
                     <User className="w-4 h-4" /> {authSubmitting ? 'Verifying...' : 'Sign In as Customer'}
-                  </button>
-
-                  {/* Quick Demo Customer Button */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      quickLoginAs('CUSTOMER');
-                      setAuthSuccess('Signed in as Princess Sara Al-Qasimi (VIP Patron)!');
-                      setTimeout(() => {
-                        setIsAuthModalOpen(false);
-                        setAuthSuccess(null);
-                        setAuthMessage(null);
-                      }, 500);
-                    }}
-                    className="w-full py-2 bg-[#051712] hover:bg-[#093527] border border-[#C5A059]/40 text-[#C5A059] font-serif font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-1.5"
-                  >
-                    <Sparkles className="w-3.5 h-3.5" /> One-Click VIP Demo Customer
                   </button>
                 </div>
               </form>

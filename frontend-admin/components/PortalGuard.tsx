@@ -32,7 +32,7 @@ export default function PortalGuard({
   portalDescription,
   children,
 }: PortalGuardProps) {
-  const { user, isAuthenticated, isLoading, login, quickLoginAs, logout, hasRole } = useAuth();
+  const { user, isAuthenticated, isLoading, login, logout, hasRole } = useAuth();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -40,7 +40,7 @@ export default function PortalGuard({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Identify the primary required role for demo info
+  // Identify the primary required role for credentials info
   const primaryRole = allowedRoles[0] || 'ADMIN';
   const targetDemo = DEMO_ACCOUNTS[primaryRole] || DEMO_ACCOUNTS.ADMIN;
 
@@ -60,16 +60,6 @@ export default function PortalGuard({
     if (!res.success) {
       setErrorMessage(res.error || 'Access denied.');
     }
-  };
-
-  const handleAutofillDemo = () => {
-    setUsername(targetDemo.username);
-    setPassword(targetDemo.password);
-    setErrorMessage(null);
-  };
-
-  const handleInstantQuickLogin = () => {
-    quickLoginAs(primaryRole);
   };
 
   if (isLoading) {
@@ -228,6 +218,21 @@ export default function PortalGuard({
                 )}
               </button>
             </form>
+
+            {/* Authorized Staff Credentials Guide */}
+            <div className="mt-4 p-3 rounded-xl bg-[#051712] border border-[#C5A059]/30 text-xs text-gray-300 space-y-1">
+              <span className="text-[#C5A059] font-bold block uppercase tracking-wider font-mono text-[10px]">
+                Authorized {portalName} Credentials:
+              </span>
+              <div className="flex justify-between font-mono text-[11px]">
+                <span>Username:</span>
+                <strong className="text-white">{targetDemo.username}</strong>
+              </div>
+              <div className="flex justify-between font-mono text-[11px]">
+                <span>Password:</span>
+                <strong className="text-white">{targetDemo.password}</strong>
+              </div>
+            </div>
           </div>
         </main>
 

@@ -103,17 +103,6 @@ export default function MasterLoginPage() {
       target: '/agent',
       desc: 'Omnichannel lead pipeline, WhatsApp contact logs, consultation scheduler, and conversion metrics.',
     },
-    {
-      role: 'CUSTOMER' as UserRole,
-      title: 'Customer Atelier & Storefront',
-      icon: ShoppingBag,
-      color: '#C5A059',
-      border: 'border-[#C5A059]/40',
-      bg: 'bg-[#C5A059]/10',
-      badge: '💎 VIP Patron',
-      target: '/',
-      desc: 'Browse runway collections, watch video campaign deals, Create Your Own bespoke garments, and track orders.',
-    },
   ];
 
   return (
@@ -216,7 +205,6 @@ export default function MasterLoginPage() {
                   <option value="DESIGNER">✂️ Haute Couture Designer Studio (/designer)</option>
                   <option value="PRODUCTION">🧵 Production Floor & QC (/production)</option>
                   <option value="AGENT">🎧 Fashion CRM & Concierge (/agent)</option>
-                  <option value="CUSTOMER">💎 Customer Atelier & Orders (/)</option>
                 </select>
               </div>
 
@@ -226,6 +214,8 @@ export default function MasterLoginPage() {
                 </label>
                 <input
                   type="text"
+                  required
+                  placeholder="e.g. admin or designer"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="w-full bg-[#051712] border border-[#C5A059]/30 rounded-lg px-3.5 py-2.5 text-sm text-[#FCFBF7] focus:outline-none focus:border-[#C5A059]"
@@ -239,6 +229,8 @@ export default function MasterLoginPage() {
                 <div className="relative">
                   <input
                     type={showPassword ? 'text' : 'password'}
+                    required
+                    placeholder="Enter security password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full bg-[#051712] border border-[#C5A059]/30 rounded-lg px-3.5 py-2.5 text-sm text-[#FCFBF7] focus:outline-none focus:border-[#C5A059]"
@@ -256,22 +248,49 @@ export default function MasterLoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full mt-2 py-3 bg-gradient-to-r from-[#C5A059] to-[#dfbc7a] text-[#051712] font-semibold text-xs tracking-widest uppercase rounded-lg hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
+                className="w-full mt-2 py-3 bg-gradient-to-r from-[#C5A059] to-[#dfbc7a] text-[#051712] font-black text-xs tracking-widest uppercase rounded-lg hover:brightness-110 active:scale-[0.99] transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50"
               >
-                {loading ? 'Authenticating...' : `Enter ${DEMO_ACCOUNTS[selectedPortal]?.department}`}
+                {loading ? 'Authenticating...' : `Sign In to ${DEMO_ACCOUNTS[selectedPortal]?.department || 'Department'}`}
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
 
-            <div className="mt-6 pt-4 border-t border-[#C5A059]/20 text-xs text-[#FCFBF7]/60">
-              <p className="flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                Cross-department access is strictly regulated. Unauthorized personnel cannot view sensitive customer files or financial records.
-              </p>
+            {/* Authorized Staff Credentials Guide */}
+            <div className="mt-4 p-3.5 rounded-xl bg-[#051712] border border-[#C5A059]/40 text-xs space-y-2">
+              <span className="text-[#C5A059] font-serif font-bold uppercase tracking-wider block text-[10px]">
+                Authorized Staff Credentials Directory:
+              </span>
+              <div className="space-y-1.5 font-mono text-[11px] text-gray-300">
+                <div className="flex justify-between border-b border-[#C5A059]/15 pb-1">
+                  <span className="text-[#C5A059]">👑 Owner &amp; Admin:</span>
+                  <span className="text-white font-bold">admin / AdminPassword2026!</span>
+                </div>
+                <div className="flex justify-between border-b border-[#C5A059]/15 pb-1">
+                  <span className="text-[#E0A96D]">✂️ Haute Designer:</span>
+                  <span className="text-white font-bold">designer / DesignerPass2026!</span>
+                </div>
+                <div className="flex justify-between border-b border-[#C5A059]/15 pb-1">
+                  <span className="text-[#10B981]">🧵 Production Floor:</span>
+                  <span className="text-white font-bold">production / ProductionPass2026!</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-[#38BDF8]">🎧 VIP Concierge:</span>
+                  <span className="text-white font-bold">agent / AgentPass2026!</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-[#C5A059]/20 flex items-center justify-between text-xs text-[#FCFBF7]/60">
+              <Link href="/register" className="text-[#C5A059] hover:underline font-bold">
+                Customer Sign-In &amp; Registration &rarr;
+              </Link>
+              <Link href="/" className="hover:text-white">
+                Storefront &rarr;
+              </Link>
             </div>
           </div>
 
-          {/* Right Column: Portal Showcase & 1-Click Launchers (7 Cols) */}
+          {/* Right Column: Department Portals Selection (7 Cols) */}
           <div className="lg:col-span-7 space-y-4">
             <h2 className="font-serif text-lg text-[#C5A059] tracking-wider uppercase mb-2">
               Select Department to Launch

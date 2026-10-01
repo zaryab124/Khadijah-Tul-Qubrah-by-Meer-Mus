@@ -86,15 +86,15 @@ export const DEMO_ACCOUNTS: Record<string, DemoAccount> = {
   CUSTOMER: {
     role: 'CUSTOMER',
     department: 'Private Client Suite',
-    portalName: 'Customer Atelier & Orders',
+    portalName: 'Customer Account & Orders',
     portalUrl: '/',
     username: 'customer',
     email: 'customer@khadijah.couture',
     password: 'CustomerPass2026!',
-    displayName: 'Princess Sara Al-Qasimi',
+    displayName: 'Boutique Client',
     accentColor: '#C5A059',
-    badge: '💎 VIP Patron',
-    description: 'Browse luxury runway garments, watch campaign video deals, commission custom pieces, and track orders.',
+    badge: 'Client Account',
+    description: 'Browse luxury runway garments, configure stitching, commission custom pieces, and track orders.',
   },
 };
 

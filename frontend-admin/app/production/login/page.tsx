@@ -9,18 +9,22 @@ import { useAuth, DEMO_ACCOUNTS } from '@/lib/auth-context';
 
 export default function ProductionLoginPage() {
   const router = useRouter();
-  const { login, quickLoginAs } = useAuth();
-  const [username, setUsername] = useState(DEMO_ACCOUNTS.PRODUCTION.username);
-  const [password, setPassword] = useState(DEMO_ACCOUNTS.PRODUCTION.password);
+  const { login } = useAuth();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!username.trim() || !password) {
+      setError('Please enter both craftsman username/email and password.');
+      return;
+    }
     setError(null);
     setLoading(true);
 
-    const res = await login(username, password, 'PRODUCTION');
+    const res = await login(username.trim(), password, 'PRODUCTION');
     setLoading(false);
 
     if (res.success) {
@@ -28,11 +32,6 @@ export default function ProductionLoginPage() {
     } else {
       setError(res.error || 'Invalid workshop craftsman credentials');
     }
-  };
-
-  const handleQuickDemo = () => {
-    quickLoginAs('PRODUCTION');
-    router.push('/production');
   };
 
   return (
@@ -92,6 +91,20 @@ export default function ProductionLoginPage() {
               />
             </div>
 
+            <div className="p-3 rounded-xl bg-[#051712] border border-[#10B981]/30 text-[11px] text-gray-300 space-y-1">
+              <span className="text-[#10B981] font-bold block uppercase tracking-wider font-mono text-[10px]">
+                Authorized Production Credentials:
+              </span>
+              <div className="flex justify-between font-mono text-[11px]">
+                <span>Username:</span>
+                <strong className="text-white">production</strong>
+              </div>
+              <div className="flex justify-between font-mono text-[11px]">
+                <span>Password:</span>
+                <strong className="text-white">ProductionPass2026!</strong>
+              </div>
+            </div>
+
             <div className="pt-2 space-y-2">
               <button
                 type="submit"
@@ -99,14 +112,6 @@ export default function ProductionLoginPage() {
                 className="w-full py-3.5 bg-gradient-to-r from-[#10B981] to-[#34D399] text-[#051712] font-black rounded-xl text-xs uppercase tracking-widest transition-all cursor-pointer shadow-lg shadow-[#10B981]/20 hover:brightness-110"
               >
                 {loading ? 'Authenticating...' : 'Sign In as Workshop Master'}
-              </button>
-
-              <button
-                type="button"
-                onClick={handleQuickDemo}
-                className="w-full py-2 bg-[#051712] hover:bg-[#0a3e30] border border-[#10B981]/40 text-[#10B981] text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-[#10B981]" /> 1-Click Demo Login (Production)
               </button>
             </div>
           </form>
