@@ -281,6 +281,19 @@ export default function HauteCoutureApp() {
           }))
         );
       }
+
+      // 2. Read real custom commissions submitted by clients (No dummy data)
+      try {
+        const storedCommissions = localStorage.getItem('khadijah_custom_requests');
+        if (storedCommissions) {
+          const parsed = JSON.parse(storedCommissions);
+          if (Array.isArray(parsed)) {
+            setCommissions(parsed);
+          }
+        }
+      } catch (e) {
+        console.warn('Error reading stored commissions:', e);
+      }
     }
 
     loadCatalog();
@@ -323,31 +336,51 @@ export default function HauteCoutureApp() {
     },
   ]);
 
-  // Bespoke Custom Design Commissions (shared between Customer, Designer, Production)
-  const [commissions, setCommissions] = useState<CustomCommission[]>([
+  // Bespoke Custom Design Commissions (Clean live state, populated by actual customer submissions)
+  const [commissions, setCommissions] = useState<CustomCommission[]>([]);
+
+  // Selected Handcraft Showcase Item for Magnified Inspection
+  const [selectedHandcraftModal, setSelectedHandcraftModal] = useState<any | null>(null);
+
+  // Master Handcrafted Designs Showcase (Pure Needlework & Artisan Embroidery)
+  const handcraftShowcaseItems = [
     {
-      id: 'comm-101',
-      requestNumber: 'CDR-202609-001',
-      customerName: 'Begum Sophia Al-Rashid',
-      productType: 'Peshwas & Dupatta',
-      fabric: 'Micro Velvet 9000',
-      craft: 'Zardozi Handwork (Metallic Gold)',
-      colour: 'Royal Emerald Green',
-      measurements: { chest: '36"', waist: '28"', hip: '38"', length: '56"' },
-      notes: 'Please add heavier border embroidery with gold pearls and scalloped sleeves.',
-      status: 'QUOTE_SENT',
-      quotationVersion: 'V2',
-      basePrice: 380000,
-      customizationFee: 95000,
-      deliveryFee: 15000,
-      discount: 25000,
-      totalAmount: 465000,
-      designerNotes: 'V2 updated with requested pearl scallop border and calibrated karigar hours.',
-      productionStage: 'CRAFTING',
-      progressPercentage: 60,
-      trackingNumber: 'TCS-9847291-PK',
+      id: 'hc-1',
+      title: 'The Imperial Antique Zardozi Peshwas',
+      craftBadge: '24k Metallic Tilla & Antique Zardozi',
+      fabric: 'Micro Velvet 9000 & Loomed Silk',
+      karigarHours: '160',
+      imageUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80',
+      techniqueDescription: 'Centuries-old zardozi needlework executed with gold metallic tilla, heavy French knots, and dabka floral borders on deep royal emerald velvet.',
     },
-  ]);
+    {
+      id: 'hc-2',
+      title: 'Mughal Marori Pure Katan Silk Anarkali',
+      craftBadge: 'Marori Threadwork & Dabka Cuffs',
+      fabric: 'Pure Katan Silk (32 Kalis)',
+      karigarHours: '120',
+      imageUrl: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1200&q=80',
+      techniqueDescription: '32 hand-pleated silk kalis featuring delicate floral Mughal jaal with marori twisting embroidery and antique dabka accents.',
+    },
+    {
+      id: 'hc-3',
+      title: 'Regal Kora Dabka Bridal Lehenga Set',
+      craftBadge: 'Heavy Cutwork & Kora Dabka Zardozi',
+      fabric: '80g Hand-Loomed Raw Silk',
+      karigarHours: '220',
+      imageUrl: 'https://images.unsplash.com/photo-1594223274512-ad4803739b7c?auto=format&fit=crop&w=1200&q=80',
+      techniqueDescription: 'Regal bridal skirt adorned with geometric Mughal archways, 3D wirework cutwork, and hand-beaded gota patti embellishments.',
+    },
+    {
+      id: 'hc-4',
+      title: 'Featherlight Organza Silk Kurta & Dupatta',
+      craftBadge: 'Resham Jaal & Seed Pearls',
+      fabric: 'French Pure Silk Organza',
+      karigarHours: '85',
+      imageUrl: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1200&q=80',
+      techniqueDescription: 'Ultra-fine sheer French organza embellished with hand-appliquéd tissue borders, resham threadwork, and freshwater seed pearls.',
+    },
+  ];
 
   // "Create Your Own" Studio Form State
   const [customForm, setCustomForm] = useState({
@@ -473,7 +506,15 @@ export default function HauteCoutureApp() {
       status: 'PENDING_QUOTE',
     };
 
-    setCommissions([newCommission, ...commissions]);
+    const updatedCommissions = [newCommission, ...commissions];
+    setCommissions(updatedCommissions);
+
+    try {
+      localStorage.setItem('khadijah_custom_requests', JSON.stringify(updatedCommissions));
+      window.dispatchEvent(new Event('khadijah_catalog_updated'));
+    } catch (e) {
+      console.warn('Local custom requests save error:', e);
+    }
 
     // Asynchronously submit to Supabase
     submitCustomRequestToSupabase({
@@ -709,6 +750,125 @@ export default function HauteCoutureApp() {
             </div>
           </section>
 
+          {/* ========================================================================= */}
+          {/* MASTER HANDCRAFTED DESIGNS SHOWCASE BOX (PURE ARTISAN NEEDLEWORK) */}
+          {/* ========================================================================= */}
+          <section className="relative rounded-3xl border-2 border-[#C5A059] bg-gradient-to-br from-[#06241b] via-[#041712] to-[#072a20] p-6 sm:p-8 lg:p-10 shadow-2xl overflow-hidden">
+            {/* Ambient Gold Radial Accents */}
+            <div className="absolute top-0 right-0 w-96 h-96 bg-[radial-gradient(circle_at_70%_30%,rgba(197,160,89,0.18),transparent_70%)] pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-80 h-80 bg-[radial-gradient(circle_at_30%_70%,rgba(7,42,32,0.7),transparent_70%)] pointer-events-none" />
+
+            <div className="relative z-10 space-y-6">
+              {/* Showcase Box Header */}
+              <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 border-b border-[#C5A059]/30 pb-6">
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#C5A059]/15 border border-[#C5A059]/50 text-[#C5A059] text-[11px] font-mono font-bold tracking-[0.25em] uppercase shadow-sm">
+                    <Sparkles className="w-3.5 h-3.5 text-[#C5A059] animate-pulse" />
+                    <span>MASTER KARIGAR ATELIER • 100% ARTISAN HANDCRAFTED</span>
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-bold text-white tracking-wide">
+                    Handcrafted Designs Showcase
+                  </h2>
+                  <p className="text-xs sm:text-sm text-gray-300 font-light max-w-2xl leading-relaxed">
+                    Centuries-old royal South Asian needlework: 24k metallic tilla, antique zardozi, kora dabka wirework, marori threadwork, and hand-pleated kalis crafted by master karigars.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <a
+                    href="#bespoke-studio"
+                    className="px-5 py-2.5 rounded-xl bg-[#C5A059] text-[#051712] font-serif font-bold text-xs uppercase tracking-wider hover:bg-[#d4af37] transition-all shadow-lg shadow-[#C5A059]/20 flex items-center gap-1.5"
+                  >
+                    <Scissors className="w-4 h-4" /> Commission Custom Handcraft
+                  </a>
+                  <a
+                    href="#catalog"
+                    className="px-4 py-2.5 rounded-xl bg-[#051712] border border-[#C5A059]/40 text-[#C5A059] hover:bg-[#072A20] text-xs font-semibold uppercase tracking-wider transition-all"
+                  >
+                    Explore Ready Dresses &darr;
+                  </a>
+                </div>
+              </div>
+
+              {/* Showcase Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                {handcraftShowcaseItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="group relative rounded-2xl overflow-hidden border border-[#C5A059]/40 bg-[#051712]/90 hover:border-[#C5A059] transition-all duration-300 shadow-xl flex flex-col justify-between"
+                  >
+                    {/* Handcraft Photo with Magnify / Zoom Effect */}
+                    <div
+                      className="relative aspect-[4/5] overflow-hidden bg-black cursor-pointer"
+                      onClick={() => setSelectedHandcraftModal(item)}
+                    >
+                      <img
+                        src={item.imageUrl}
+                        alt={item.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#020b08] via-transparent to-black/30" />
+
+                      {/* Craft Badge */}
+                      <div className="absolute top-3 left-3 bg-[#051712]/90 backdrop-blur-md px-2.5 py-1 rounded-full border border-[#C5A059]/60 text-[9px] font-bold text-[#C5A059] tracking-wider uppercase">
+                        {item.craftBadge}
+                      </div>
+
+                      {/* Karigar Hours Badge */}
+                      <div className="absolute bottom-3 left-3 bg-[#072A20]/90 backdrop-blur-md px-2 py-0.5 rounded-md border border-[#C5A059]/40 text-[10px] font-mono text-gray-200">
+                        {item.karigarHours} Karigar Hours
+                      </div>
+
+                      {/* Zoom Indicator */}
+                      <div className="absolute bottom-3 right-3 p-2 rounded-full bg-[#051712]/80 border border-[#C5A059]/40 text-[#C5A059] group-hover:bg-[#C5A059] group-hover:text-[#051712] transition-colors shadow">
+                        <Eye className="w-3.5 h-3.5" />
+                      </div>
+                    </div>
+
+                    {/* Details */}
+                    <div className="p-4 space-y-2.5 flex-1 flex flex-col justify-between">
+                      <div>
+                        <span className="text-[10px] text-gray-400 font-mono block mb-1">{item.fabric}</span>
+                        <h4 className="text-sm font-serif font-bold text-white group-hover:text-[#C5A059] transition-colors leading-snug">
+                          {item.title}
+                        </h4>
+                        <p className="text-[11px] text-gray-300 mt-1 line-clamp-2 leading-relaxed font-light">
+                          {item.techniqueDescription}
+                        </p>
+                      </div>
+
+                      <div className="pt-2 border-t border-[#C5A059]/20 flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCustomForm((prev) => ({
+                              ...prev,
+                              craft: item.craftBadge,
+                              fabric: item.fabric.split('&')[0].trim(),
+                            }));
+                            const el = document.getElementById('bespoke-studio');
+                            el?.scrollIntoView({ behavior: 'smooth' });
+                          }}
+                          className="flex-1 py-2 rounded-lg bg-[#072A20] hover:bg-[#C5A059] text-[#C5A059] hover:text-[#051712] border border-[#C5A059]/40 hover:border-[#C5A059] font-serif font-bold text-[11px] tracking-wider transition-all flex items-center justify-center gap-1.5 shadow"
+                        >
+                          <Sparkles className="w-3 h-3" /> Select for Bespoke
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedHandcraftModal(item)}
+                          className="p-2 rounded-lg border border-[#C5A059]/40 text-[#C5A059] hover:bg-[#072A20]"
+                          title="Inspect Needlework Detail"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
           {/* Couture Menu / Category Navigation Filter */}
           <section id="catalog" className="space-y-6 pt-4 scroll-mt-24">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#C5A059]/20 pb-4">
@@ -846,7 +1006,7 @@ export default function HauteCoutureApp() {
           {/* ========================================================================= */}
           {/* 3. "CREATE YOUR OWN" BESPOKE STUDIO (STEP-BY-STEP CUSTOM COMMISSION) */}
           {/* ========================================================================= */}
-          <section className="rounded-3xl border-2 border-[#C5A059] bg-gradient-to-br from-[#072A20] via-[#051712] to-[#072A20] p-8 md:p-12 shadow-2xl relative overflow-hidden">
+          <section id="bespoke-studio" className="scroll-mt-24 rounded-3xl border-2 border-[#C5A059] bg-gradient-to-br from-[#072A20] via-[#051712] to-[#072A20] p-8 md:p-12 shadow-2xl relative overflow-hidden">
             <div className="max-w-3xl space-y-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#C5A059]/10 text-[#C5A059] border border-[#C5A059]/40 text-xs font-bold tracking-widest uppercase">
                 <Sparkles className="w-3.5 h-3.5" /> CUSTOM MADE CLOTHING
@@ -1271,6 +1431,78 @@ export default function HauteCoutureApp() {
                 className="px-6 py-2.5 bg-[#C5A059] text-[#051712] font-bold text-xs rounded-lg hover:bg-[#d4af37]"
               >
                 Claim Exclusive Privilege
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* HANDCRAFTED DESIGN LIGHTBOX INSPECTION MODAL */}
+      {/* ========================================================================= */}
+      {selectedHandcraftModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-fadeIn">
+          <div className="relative w-full max-w-2xl rounded-2xl bg-[#051712] border-2 border-[#C5A059] p-6 shadow-2xl space-y-4">
+            <button
+              onClick={() => setSelectedHandcraftModal(null)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-[#072A20] text-gray-400 hover:text-white border border-[#C5A059]/30"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div>
+              <span className="text-[10px] tracking-widest text-[#C5A059] font-bold uppercase block font-mono">
+                ARTISAN NEEDLEWORK INSPECTION
+              </span>
+              <h3 className="text-2xl font-serif font-bold text-white mt-1">
+                {selectedHandcraftModal.title}
+              </h3>
+              <p className="text-xs text-[#C5A059] mt-0.5">
+                Technique: {selectedHandcraftModal.craftBadge} &bull; {selectedHandcraftModal.karigarHours} Karigar Crafting Hours
+              </p>
+            </div>
+
+            <div className="rounded-xl overflow-hidden border border-[#C5A059]/40 aspect-[4/3] bg-black">
+              <img
+                src={selectedHandcraftModal.imageUrl}
+                alt={selectedHandcraftModal.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-[#072A20] border border-[#C5A059]/30 text-xs text-gray-300 space-y-2">
+              <div className="flex items-center justify-between text-[#C5A059] font-mono text-[11px]">
+                <span>Base Fabric: {selectedHandcraftModal.fabric}</span>
+                <span className="font-bold">100% Genuine Handwork</span>
+              </div>
+              <p className="leading-relaxed font-light text-gray-200">
+                {selectedHandcraftModal.techniqueDescription}
+              </p>
+            </div>
+
+            <div className="pt-2 flex items-center justify-end gap-3 border-t border-[#C5A059]/20">
+              <button
+                type="button"
+                onClick={() => setSelectedHandcraftModal(null)}
+                className="px-4 py-2 rounded-xl border border-gray-700 text-gray-300 hover:bg-gray-800 text-xs"
+              >
+                Close View
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setCustomForm((prev) => ({
+                    ...prev,
+                    craft: selectedHandcraftModal.craftBadge,
+                    fabric: selectedHandcraftModal.fabric.split('&')[0].trim(),
+                  }));
+                  setSelectedHandcraftModal(null);
+                  const el = document.getElementById('bespoke-studio');
+                  el?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="px-5 py-2 rounded-xl bg-[#C5A059] hover:bg-[#d4af37] text-[#051712] font-serif font-bold text-xs uppercase tracking-wider shadow"
+              >
+                Commission This Handcraft
               </button>
             </div>
           </div>

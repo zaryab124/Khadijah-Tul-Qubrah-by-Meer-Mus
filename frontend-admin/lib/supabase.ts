@@ -259,3 +259,26 @@ export async function submitCustomRequestToSupabase(
   if (res.error) return { success: false, error: res.error };
   return { success: true, requestId: res.data?.[0]?.id };
 }
+
+/**
+ * Fetch all real client orders from Supabase
+ */
+export async function fetchOrdersFromSupabase(): Promise<SupabaseOrderRow[] | null> {
+  const res = await supabaseRestQuery<SupabaseOrderRow[]>('orders', {
+    method: 'GET',
+    query: { select: '*', order: 'created_at.desc' },
+  });
+  return res.data;
+}
+
+/**
+ * Fetch all real custom bespoke requests from Supabase
+ */
+export async function fetchCustomRequestsFromSupabase(): Promise<SupabaseCustomRequestRow[] | null> {
+  const res = await supabaseRestQuery<SupabaseCustomRequestRow[]>('custom_requests', {
+    method: 'GET',
+    query: { select: '*', order: 'created_at.desc' },
+  });
+  return res.data;
+}
+

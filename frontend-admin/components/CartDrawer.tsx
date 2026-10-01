@@ -113,6 +113,32 @@ export const CartDrawer: React.FC<Props> = ({
     setIsSubmitting(true);
     const orderNumber = `KTQ-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
+    const newOrderRecord = {
+      id: `ord-${Date.now()}`,
+      order_number: orderNumber,
+      customer_name: customerName,
+      customer_phone: customerPhone,
+      customer_email: customerEmail || undefined,
+      shipping_address: shippingAddress || 'Boutique Collection',
+      city,
+      subtotal: rawSubtotal,
+      discount: discountAmount,
+      total_amount: finalTotal,
+      status: 'CONFIRMED',
+      notes: `Branch: ${activeBranchName}`,
+      created_at: new Date().toISOString(),
+    };
+
+    try {
+      let existingOrders = [];
+      const stored = localStorage.getItem('khadijah_real_orders');
+      if (stored) existingOrders = JSON.parse(stored);
+      localStorage.setItem('khadijah_real_orders', JSON.stringify([newOrderRecord, ...existingOrders]));
+      window.dispatchEvent(new Event('khadijah_catalog_updated'));
+    } catch (e) {
+      console.warn('Local storage order save error:', e);
+    }
+
     try {
       // Send to Supabase REST
       await submitOrderToSupabase(

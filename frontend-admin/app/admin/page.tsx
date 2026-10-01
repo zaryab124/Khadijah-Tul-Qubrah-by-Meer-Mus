@@ -49,6 +49,8 @@ import {
   createProductInSupabase,
   updateProductInSupabase,
   addMediaGalleryItem,
+  fetchOrdersFromSupabase,
+  fetchCustomRequestsFromSupabase,
 } from '../../lib/supabase';
 
 // Client-side image compressor & processor: scales local device photos/camera captures to max 1200px width/height Base64 JPEG (~150-250KB)
@@ -279,6 +281,10 @@ export default function AdminControlCenterPage() {
     imageUrl: '',
   });
 
+  // Real Orders and Real Bespoke Requests state (No Dummy Data)
+  const [orders, setOrders] = useState<any[]>([]);
+  const [customRequests, setCustomRequests] = useState<any[]>([]);
+
   // Fetch initial data from Supabase and synchronize with local storage
   useEffect(() => {
     async function loadSupabaseData() {
@@ -336,6 +342,65 @@ export default function AdminControlCenterPage() {
         if (localProducts.length > 0) {
           setProducts(localProducts);
         }
+      }
+
+      // Load real client orders from Supabase & local storage
+      try {
+        let localOrders: any[] = [];
+        const storedOrders = localStorage.getItem('khadijah_real_orders');
+        if (storedOrders) localOrders = JSON.parse(storedOrders);
+
+        const remoteOrders = await fetchOrdersFromSupabase();
+        if (remoteOrders && remoteOrders.length > 0) {
+          const remoteOrderIds = new Set(remoteOrders.map((o) => o.order_number || o.id));
+          setOrders([...remoteOrders, ...localOrders.filter((lo) => !remoteOrderIds.has(lo.order_number || lo.id))]);
+        } else {
+          setOrders(localOrders);
+        }
+      } catch (err) {
+        console.warn('Orders fetch error:', err);
+      }
+
+      // Load real bespoke requests from Supabase & local storage
+      try {
+        let localReqs: any[] = [];
+        const storedReqs = localStorage.getItem('khadijah_custom_requests');
+        if (storedReqs) localReqs = JSON.parse(storedReqs);
+
+        const remoteReqs = await fetchCustomRequestsFromSupabase();
+        if (remoteReqs && remoteReqs.length > 0) {
+          const remoteReqIds = new Set(remoteReqs.map((r) => r.request_number || r.id));
+          setCustomRequests([...remoteReqs, ...localReqs.filter((lr) => !remoteReqIds.has(lr.request_number || lr.id))]);
+        } else {
+          setCustomRequests(localReqs);
+        }
+      } catch (err) {
+        console.warn('Custom requests fetch error:', err);
+      }
+
+      // Load real registered customers into users roster
+      try {
+        const storedCustomers = localStorage.getItem('khadijah_registered_customers');
+        if (storedCustomers) {
+          const registeredList = JSON.parse(storedCustomers);
+          if (Array.isArray(registeredList) && registeredList.length > 0) {
+            setUsers((prev) => {
+              const existingEmails = new Set(prev.map((u) => u.email));
+              const newClients = registeredList
+                .filter((rc) => !existingEmails.has(rc.email))
+                .map((rc, idx) => ({
+                  id: rc.id || `u-client-${idx + 1}`,
+                  name: rc.name,
+                  email: rc.email || rc.phone || 'client@meermus.luxury',
+                  role: 'CUSTOMER',
+                  isActive: true,
+                }));
+              return [...prev, ...newClients];
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('Error reading registered customers:', e);
       }
     }
     loadSupabaseData();
@@ -397,7 +462,6 @@ export default function AdminControlCenterPage() {
     { id: 'u-3', name: 'Fatima Bibi', email: 'fatima.agent@meermus.luxury', role: 'AGENT', isActive: true },
     { id: 'u-4', name: 'Haider Rizvi', email: 'haider.designer@meermus.luxury', role: 'DESIGNER', isActive: true },
     { id: 'u-5', name: 'Ustad Shakoor', email: 'shakoor.prod@meermus.luxury', role: 'PRODUCTION', isActive: true },
-    { id: 'u-6', name: 'Princess Sarah Al-Saud', email: 'sarah.client@example.com', role: 'CUSTOMER', isActive: true },
   ]);
 
   // Trigger Destructive Action Dialog
@@ -730,15 +794,17 @@ export default function AdminControlCenterPage() {
         </div>
       )}
 
-      {/* 9 Executive KPI Cards Required by Prompt */}
+      {/* 9 Executive KPI Cards Computed From Live Base Data */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
         <div className="p-5 rounded-xl bg-[#051c15] border border-[#C5A059]/30">
           <div className="flex justify-between items-center mb-1">
             <span className="text-[11px] text-gray-400 uppercase tracking-wider">Total Sales</span>
             <DollarSign className="w-4 h-4 text-[#C5A059]" />
           </div>
-          <div className="text-xl font-serif text-[#FCFBF7]">PKR 14,850,000</div>
-          <span className="text-[11px] text-emerald-400 mt-1 inline-block">+18.4% verified revenue</span>
+          <div className="text-xl font-serif text-[#FCFBF7]">
+            PKR {orders.reduce((sum, o) => sum + (Number(o.total_amount) || 0), 0).toLocaleString()}
+          </div>
+          <span className="text-[11px] text-emerald-400 mt-1 inline-block">Live verified base revenue</span>
         </div>
 
         <div className="p-5 rounded-xl bg-[#051c15] border border-[#C5A059]/30">
@@ -746,8 +812,10 @@ export default function AdminControlCenterPage() {
             <span className="text-[11px] text-gray-400 uppercase tracking-wider">Orders</span>
             <ShoppingBag className="w-4 h-4 text-[#C5A059]" />
           </div>
-          <div className="text-xl font-serif text-[#FCFBF7]">54 Placed</div>
-          <span className="text-[11px] text-yellow-400 mt-1 inline-block">18 in atelier crafting</span>
+          <div className="text-xl font-serif text-[#FCFBF7]">{orders.length} Placed</div>
+          <span className="text-[11px] text-yellow-400 mt-1 inline-block">
+            {orders.filter((o) => o.status === 'IN_PRODUCTION' || o.status === 'PAID').length} in atelier crafting
+          </span>
         </div>
 
         <div className="p-5 rounded-xl bg-[#051c15] border border-[#C5A059]/30">
@@ -755,8 +823,8 @@ export default function AdminControlCenterPage() {
             <span className="text-[11px] text-gray-400 uppercase tracking-wider">Custom Requests</span>
             <Sparkles className="w-4 h-4 text-[#C5A059]" />
           </div>
-          <div className="text-xl font-serif text-[#FCFBF7]">42 Inquiries</div>
-          <span className="text-[11px] text-emerald-400 mt-1 inline-block">16 active in studio</span>
+          <div className="text-xl font-serif text-[#FCFBF7]">{customRequests.length} Inquiries</div>
+          <span className="text-[11px] text-emerald-400 mt-1 inline-block">Active bespoke commissions</span>
         </div>
 
         <div className="p-5 rounded-xl bg-[#051c15] border border-[#C5A059]/30">
@@ -764,8 +832,10 @@ export default function AdminControlCenterPage() {
             <span className="text-[11px] text-gray-400 uppercase tracking-wider">Pending Quotes</span>
             <FileText className="w-4 h-4 text-[#C5A059]" />
           </div>
-          <div className="text-xl font-serif text-[#FCFBF7]">11 Quotations</div>
-          <span className="text-[11px] text-yellow-400 mt-1 inline-block">4 revision loops</span>
+          <div className="text-xl font-serif text-[#FCFBF7]">
+            {customRequests.filter((r) => r.status === 'PENDING_QUOTE').length} Pending
+          </div>
+          <span className="text-[11px] text-yellow-400 mt-1 inline-block">Awaiting designer valuation</span>
         </div>
 
         <div className="p-5 rounded-xl bg-[#051c15] border border-[#C5A059]/30">
@@ -911,36 +981,34 @@ export default function AdminControlCenterPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-800">
-                    <tr>
-                      <td className="p-3 font-mono text-[#C5A059]">ORD-202609-001</td>
-                      <td className="p-3">Princess Sarah Al-Saud</td>
-                      <td className="p-3 font-semibold">PKR 485,000</td>
-                      <td className="p-3">
-                        <span className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800 text-xs">
-                          IN_PRODUCTION
-                        </span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="p-3 font-mono text-[#C5A059]">ORD-202609-002</td>
-                      <td className="p-3">Amina Tariq</td>
-                      <td className="p-3 font-semibold">PKR 340,000</td>
-                      <td className="p-3">
-                        <span className="px-2 py-0.5 rounded bg-yellow-950 text-yellow-400 border border-yellow-800 text-xs">
-                          QUALITY_CHECK
-                        </span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="p-3 font-mono text-[#C5A059]">ORD-202609-003</td>
-                      <td className="p-3">Farah Naz</td>
-                      <td className="p-3 font-semibold">PKR 620,000</td>
-                      <td className="p-3">
-                        <span className="px-2 py-0.5 rounded bg-blue-950 text-blue-400 border border-blue-800 text-xs">
-                          PAID
-                        </span>
-                      </td>
-                    </tr>
+                    {orders.length > 0 ? (
+                      orders.map((ord: any) => (
+                        <tr key={ord.id || ord.order_number} className="hover:bg-[#072A20]/30 transition-colors">
+                          <td className="p-3 font-mono text-[#C5A059]">
+                            {ord.order_number || `ORD-${ord.id?.slice(0, 6)}`}
+                          </td>
+                          <td className="p-3 font-medium text-white">{ord.customer_name}</td>
+                          <td className="p-3 font-semibold font-mono text-[#C5A059]">
+                            PKR {Number(ord.total_amount || 0).toLocaleString()}
+                          </td>
+                          <td className="p-3">
+                            <span className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800 text-xs">
+                              {ord.status || 'PLACED'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={4} className="p-8 text-center text-gray-400 text-xs">
+                          <ShoppingBag className="w-7 h-7 text-[#C5A059] mx-auto mb-2 opacity-40" />
+                          <span className="font-semibold block text-gray-300 text-sm">No Client Orders Placed Yet</span>
+                          <span className="text-[11px] text-gray-500 block mt-0.5">
+                            Real base application ready. Client purchases submitted through the storefront will display here in real-time.
+                          </span>
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -1387,28 +1455,37 @@ export default function AdminControlCenterPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-800">
-                  <tr>
-                    <td className="p-3 font-mono text-[#C5A059]">CDR-202609-001</td>
-                    <td className="p-3">Princess Sarah Al-Saud</td>
-                    <td className="p-3">Bridal Velvet Peshwas with Heavy Zardozi</td>
-                    <td className="p-3 font-semibold text-white">V2 (PKR 485,000)</td>
-                    <td className="p-3">
-                      <span className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800 text-xs">
-                        QUOTE_ACCEPTED
-                      </span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="p-3 font-mono text-[#C5A059]">CDR-202609-002</td>
-                    <td className="p-3">Amina Tariq</td>
-                    <td className="p-3">Raw Silk Anarkali with Tilla Work</td>
-                    <td className="p-3 font-semibold text-white">V1 (PKR 340,000)</td>
-                    <td className="p-3">
-                      <span className="px-2 py-0.5 rounded bg-yellow-950 text-yellow-400 border border-yellow-800 text-xs">
-                        REVISION_REQUESTED
-                      </span>
-                    </td>
-                  </tr>
+                  {customRequests.length > 0 ? (
+                    customRequests.map((req: any) => (
+                      <tr key={req.id || req.request_number} className="hover:bg-[#072A20]/30 transition-colors">
+                        <td className="p-3 font-mono text-[#C5A059]">
+                          {req.request_number || `CDR-${req.id?.slice(0, 6)}`}
+                        </td>
+                        <td className="p-3 font-medium text-white">{req.customer_name}</td>
+                        <td className="p-3 text-gray-300">
+                          {req.silhouette || 'Bespoke Garment'} ({req.fabric || 'Pure Fabric'}, {req.craft || 'Artisan Needlework'})
+                        </td>
+                        <td className="p-3 font-semibold text-white">
+                          {req.total_amount ? `PKR ${Number(req.total_amount).toLocaleString()}` : 'Awaiting Designer Valuation'}
+                        </td>
+                        <td className="p-3">
+                          <span className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800 text-xs">
+                            {req.status || 'PENDING_QUOTE'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="p-8 text-center text-gray-400 text-xs">
+                        <Sparkles className="w-7 h-7 text-[#C5A059] mx-auto mb-2 opacity-40" />
+                        <span className="font-semibold block text-gray-300 text-sm">No Custom Inquiries Yet</span>
+                        <span className="text-[11px] text-gray-500 block mt-0.5">
+                          Real base application ready. Client bespoke inquiries submitted through the 'Create Your Own Dress' atelier will display here.
+                        </span>
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
