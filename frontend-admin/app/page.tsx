@@ -202,35 +202,101 @@ export default function HauteCoutureApp() {
     },
   ]);
 
-  // Connect & Fetch Live Catalog from Supabase
+  // Connect & Fetch Live Catalog from Supabase & Admin Local Storage with Real-Time Event Sync
   useEffect(() => {
     async function loadCatalog() {
+      // 1. Read locally stored custom/camera products created or edited in Admin
+      let localProducts: any[] = [];
+      try {
+        const stored = localStorage.getItem('khadijah_custom_products');
+        if (stored) {
+          localProducts = JSON.parse(stored);
+        }
+      } catch (e) {
+        console.warn('Could not read custom products from local storage:', e);
+      }
+
       try {
         const remoteProducts = await fetchProductsFromSupabase();
         if (remoteProducts && remoteProducts.length > 0) {
-          setProducts(
-            remoteProducts.map((rp) => ({
-              id: rp.id || rp.sku,
-              name: rp.name,
-              sku: rp.sku,
-              category: rp.category,
-              basePrice: Number(rp.stitched_price),
-              stitchedPrice: Number(rp.stitched_price),
-              unstitchedPrice: Number(rp.unstitched_price),
-              fabric: rp.fabric,
-              craft: rp.craft,
-              imageUrl: rp.image_url,
-              description: rp.description || '',
-              isCustomizable: rp.is_customizable ?? true,
-              turnaroundDays: rp.turnaround_days || '14 - 28 Days',
-            }))
-          );
+          const formattedRemote = remoteProducts.map((rp) => ({
+            id: rp.id || rp.sku,
+            name: rp.name,
+            sku: rp.sku,
+            category: rp.category,
+            basePrice: Number(rp.stitched_price),
+            stitchedPrice: Number(rp.stitched_price),
+            unstitchedPrice: Number(rp.unstitched_price),
+            fabric: rp.fabric,
+            craft: rp.craft,
+            imageUrl: rp.image_url,
+            description: rp.description || '',
+            isCustomizable: rp.is_customizable ?? true,
+            turnaroundDays: rp.turnaround_days || '14 - 28 Days',
+          }));
+
+          // Merge: Put local admin items with custom photos first, deduplicated by SKU
+          const remoteSkus = new Set(formattedRemote.map((p) => p.sku));
+          const localFormatted = localProducts
+            .filter((lp) => !remoteSkus.has(lp.sku))
+            .map((lp) => ({
+              id: lp.id || lp.sku,
+              name: lp.name,
+              sku: lp.sku,
+              category: lp.category,
+              basePrice: Number(lp.stitchedPrice || lp.price),
+              stitchedPrice: Number(lp.stitchedPrice || lp.price),
+              unstitchedPrice: Number(lp.unstitchedPrice || Math.round((lp.stitchedPrice || lp.price) * 0.72)),
+              fabric: lp.fabric,
+              craft: lp.craft,
+              imageUrl: lp.imageUrl,
+              description: lp.description || '',
+              isCustomizable: true,
+              turnaroundDays: '14 - 28 Days',
+            }));
+
+          setProducts([...localFormatted, ...formattedRemote]);
+          return;
         }
       } catch (err) {
-        console.warn('Supabase storefront fetch (using built-in catalog):', err);
+        console.warn('Supabase storefront fetch (falling back to local/default):', err);
+      }
+
+      if (localProducts.length > 0) {
+        setProducts(
+          localProducts.map((lp) => ({
+            id: lp.id || lp.sku,
+            name: lp.name,
+            sku: lp.sku,
+            category: lp.category,
+            basePrice: Number(lp.stitchedPrice || lp.price),
+            stitchedPrice: Number(lp.stitchedPrice || lp.price),
+            unstitchedPrice: Number(lp.unstitchedPrice || Math.round((lp.stitchedPrice || lp.price) * 0.72)),
+            fabric: lp.fabric,
+            craft: lp.craft,
+            imageUrl: lp.imageUrl,
+            description: lp.description || '',
+            isCustomizable: true,
+            turnaroundDays: '14 - 28 Days',
+          }))
+        );
       }
     }
+
     loadCatalog();
+
+    // Listen for immediate catalog updates dispatched from the Admin portal or other browser tabs
+    const handleCatalogSync = () => {
+      loadCatalog();
+    };
+
+    window.addEventListener('khadijah_catalog_updated', handleCatalogSync);
+    window.addEventListener('storage', handleCatalogSync);
+
+    return () => {
+      window.removeEventListener('khadijah_catalog_updated', handleCatalogSync);
+      window.removeEventListener('storage', handleCatalogSync);
+    };
   }, []);
 
   // Video Deals & Campaigns

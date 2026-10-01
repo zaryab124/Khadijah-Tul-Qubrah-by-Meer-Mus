@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import PortalGuard from '../../components/PortalGuard';
 import {
@@ -37,6 +37,8 @@ import {
   Lock,
   Edit,
   Upload,
+  Camera,
+  Loader2,
   Image as LucideImage,
   Copy,
   PackageCheck,
@@ -48,6 +50,45 @@ import {
   updateProductInSupabase,
   addMediaGalleryItem,
 } from '../../lib/supabase';
+
+// Client-side image compressor & processor: scales local device photos/camera captures to max 1200px width/height Base64 JPEG (~150-250KB)
+const processImageFile = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Failed to read image file'));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Failed to load image into canvas'));
+      img.onload = () => {
+        const maxDim = 1200;
+        let width = img.width;
+        let height = img.height;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(e.target?.result as string);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
+        resolve(dataUrl);
+      };
+      img.src = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+};
 
 type AdminTab =
   | 'overview'
@@ -197,6 +238,27 @@ export default function AdminControlCenterPage() {
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
   const [showGalleryPicker, setShowGalleryPicker] = useState(false);
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+
+  // Camera & Device Gallery Upload Refs
+  const productCameraInputRef = useRef<HTMLInputElement>(null);
+  const productGalleryInputRef = useRef<HTMLInputElement>(null);
+  const galleryCameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryFileInputRef = useRef<HTMLInputElement>(null);
+  const directQuickCameraRef = useRef<HTMLInputElement>(null);
+  const directQuickGalleryRef = useRef<HTMLInputElement>(null);
+
+  // Helper to persist updated catalog to local storage and broadcast to storefront
+  const syncLocalCatalog = (updatedList: any[]) => {
+    try {
+      localStorage.setItem('khadijah_custom_products', JSON.stringify(updatedList));
+      window.dispatchEvent(new Event('khadijah_catalog_updated'));
+    } catch (err) {
+      console.warn('Error saving to local storage:', err);
+    }
+  };
+
   const [productForm, setProductForm] = useState({
     name: '',
     sku: '',
@@ -217,28 +279,45 @@ export default function AdminControlCenterPage() {
     imageUrl: '',
   });
 
-  // Fetch initial data from Supabase
+  // Fetch initial data from Supabase and synchronize with local storage
   useEffect(() => {
     async function loadSupabaseData() {
+      let localProducts: any[] = [];
+      try {
+        const stored = localStorage.getItem('khadijah_custom_products');
+        if (stored) {
+          localProducts = JSON.parse(stored);
+        }
+      } catch (e) {
+        console.warn('Local catalog read error:', e);
+      }
+
       try {
         const remoteProducts = await fetchProductsFromSupabase();
         if (remoteProducts && remoteProducts.length > 0) {
-          setProducts(
-            remoteProducts.map((rp) => ({
-              id: rp.id || rp.sku,
-              name: rp.name,
-              sku: rp.sku,
-              category: rp.category,
-              unstitchedPrice: Number(rp.unstitched_price),
-              stitchedPrice: Number(rp.stitched_price),
-              price: Number(rp.stitched_price),
-              fabric: rp.fabric,
-              craft: rp.craft,
-              imageUrl: rp.image_url,
-              description: rp.description || '',
-              isActive: rp.is_active ?? true,
-            }))
-          );
+          const formattedRemote = remoteProducts.map((rp) => ({
+            id: rp.id || rp.sku,
+            name: rp.name,
+            sku: rp.sku,
+            category: rp.category,
+            unstitchedPrice: Number(rp.unstitched_price),
+            stitchedPrice: Number(rp.stitched_price),
+            price: Number(rp.stitched_price),
+            fabric: rp.fabric,
+            craft: rp.craft,
+            imageUrl: rp.image_url,
+            description: rp.description || '',
+            isActive: rp.is_active ?? true,
+          }));
+
+          const remoteSkus = new Set(formattedRemote.map((p) => p.sku));
+          const merged = [
+            ...localProducts.filter((lp) => !remoteSkus.has(lp.sku)),
+            ...formattedRemote,
+          ];
+          setProducts(merged);
+        } else if (localProducts.length > 0) {
+          setProducts(localProducts);
         }
 
         const remoteMedia = await fetchMediaGalleryFromSupabase();
@@ -254,6 +333,9 @@ export default function AdminControlCenterPage() {
         }
       } catch (err) {
         console.warn('Supabase initial fetch in admin:', err);
+        if (localProducts.length > 0) {
+          setProducts(localProducts);
+        }
       }
     }
     loadSupabaseData();
@@ -388,6 +470,86 @@ export default function AdminControlCenterPage() {
     setIsProductModalOpen(true);
   };
 
+  // Camera & Device Gallery File Processors
+  const handleProductImageFile = async (file: File) => {
+    try {
+      setIsUploadingPhoto(true);
+      const dataUrl = await processImageFile(file);
+      setProductForm((prev) => ({ ...prev, imageUrl: dataUrl }));
+
+      // Automatically add to Boutique Media Gallery so it is preserved for future use
+      const newMedia = {
+        id: `med-${Date.now()}`,
+        title: productForm.name || 'Garment Photo (Camera / Gallery)',
+        imageUrl: dataUrl,
+        category: productForm.category,
+      };
+      setMediaGallery((prev) => [newMedia, ...prev]);
+      try {
+        await addMediaGalleryItem({
+          title: productForm.name || 'Garment Photo (Camera / Gallery)',
+          image_url: dataUrl,
+          category: productForm.category,
+        });
+      } catch (err) {
+        console.warn('Sync media warning:', err);
+      }
+      setActionSuccessMessage('Photo successfully captured and linked to garment!');
+      setTimeout(() => setActionSuccessMessage(null), 3000);
+    } catch (err) {
+      console.error('Error processing photo:', err);
+      alert('Unable to process photo. Please try another image.');
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
+  const handleGalleryImageFile = async (file: File) => {
+    try {
+      setIsUploadingPhoto(true);
+      const dataUrl = await processImageFile(file);
+      setGalleryForm((prev) => ({ ...prev, imageUrl: dataUrl }));
+      setActionSuccessMessage('Photo loaded from device gallery!');
+      setTimeout(() => setActionSuccessMessage(null), 3000);
+    } catch (err) {
+      console.error('Gallery file processing error:', err);
+      alert('Unable to process photo. Please try another image.');
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
+  const handleDirectQuickMediaUpload = async (file: File) => {
+    try {
+      setIsUploadingPhoto(true);
+      const dataUrl = await processImageFile(file);
+      const titlePrompt = prompt('Enter a title for this captured garment photo:', 'Boutique Collection Photo') || 'Boutique Photo';
+      const newMedia = {
+        id: `med-${Date.now()}`,
+        title: titlePrompt,
+        imageUrl: dataUrl,
+        category: 'Bridal Couture',
+      };
+      setMediaGallery((prev) => [newMedia, ...prev]);
+      try {
+        await addMediaGalleryItem({
+          title: titlePrompt,
+          image_url: dataUrl,
+          category: 'Bridal Couture',
+        });
+      } catch (err) {
+        console.warn('Quick media sync warning:', err);
+      }
+      setActionSuccessMessage(`Successfully uploaded "${titlePrompt}" to Boutique Media Gallery!`);
+      setTimeout(() => setActionSuccessMessage(null), 4000);
+    } catch (err) {
+      console.error('Quick media processing error:', err);
+      alert('Unable to process photo.');
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!productForm.name || !productForm.sku) {
@@ -399,25 +561,25 @@ export default function AdminControlCenterPage() {
     const uPrice = Number(productForm.unstitchedPrice);
 
     if (editingProduct) {
-      setProducts((prev) =>
-        prev.map((p) =>
-          p.id === editingProduct.id
-            ? {
-                ...p,
-                name: productForm.name,
-                sku: productForm.sku,
-                category: productForm.category,
-                stitchedPrice: sPrice,
-                unstitchedPrice: uPrice,
-                price: sPrice,
-                fabric: productForm.fabric,
-                craft: productForm.craft,
-                imageUrl: productForm.imageUrl,
-                description: productForm.description,
-              }
-            : p
-        )
+      const updatedList = products.map((p) =>
+        p.id === editingProduct.id
+          ? {
+              ...p,
+              name: productForm.name,
+              sku: productForm.sku,
+              category: productForm.category,
+              stitchedPrice: sPrice,
+              unstitchedPrice: uPrice,
+              price: sPrice,
+              fabric: productForm.fabric,
+              craft: productForm.craft,
+              imageUrl: productForm.imageUrl,
+              description: productForm.description,
+            }
+          : p
       );
+      setProducts(updatedList);
+      syncLocalCatalog(updatedList);
 
       try {
         await updateProductInSupabase(editingProduct.id, {
@@ -451,7 +613,9 @@ export default function AdminControlCenterPage() {
         isActive: true,
       };
 
-      setProducts((prev) => [newProd, ...prev]);
+      const updatedList = [newProd, ...products];
+      setProducts(updatedList);
+      syncLocalCatalog(updatedList);
 
       try {
         await createProductInSupabase({
@@ -920,21 +1084,66 @@ export default function AdminControlCenterPage() {
           {/* Sub-tab: MEDIA GALLERY (Photos Uploaded & Managed by Admin) */}
           {catalogueSubTab === 'media-gallery' && (
             <div className="p-6 rounded-xl bg-[#051c15] border border-[#C5A059]/30 space-y-6">
+              {/* Hidden file inputs for direct camera and gallery upload in media tab */}
+              <input
+                ref={directQuickCameraRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleDirectQuickMediaUpload(file);
+                  e.target.value = '';
+                }}
+              />
+              <input
+                ref={directQuickGalleryRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleDirectQuickMediaUpload(file);
+                  e.target.value = '';
+                }}
+              />
+
               <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
                 <div>
                   <h3 className="text-lg font-serif text-[#FCFBF7] flex items-center gap-2">
                     <LucideImage className="w-5 h-5 text-[#C5A059]" /> Boutique Media Gallery
                   </h3>
                   <p className="text-xs text-gray-400">
-                    High-definition catalog photography, detail close-ups, and fabric swatches uploaded by Admin
+                    High-definition catalog photography, detail close-ups, and direct camera/gallery uploads
                   </p>
                 </div>
-                <button
-                  onClick={() => setIsGalleryModalOpen(true)}
-                  className="px-3.5 py-2 bg-[#C5A059] text-[#072A20] rounded-lg text-xs font-bold hover:bg-[#d4af37] flex items-center gap-1.5 shadow"
-                >
-                  <Upload className="w-4 h-4" /> Add Photo to Gallery
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={() => directQuickCameraRef.current?.click()}
+                    disabled={isUploadingPhoto}
+                    className="px-3 py-2 bg-[#072A20] border border-emerald-500/60 text-emerald-400 rounded-lg text-xs font-bold hover:bg-[#0b3d2e] flex items-center gap-1.5 shadow"
+                    title="Take a live photo with device camera"
+                  >
+                    <Camera className="w-4 h-4 text-emerald-400" />
+                    <span>Take Photo (Camera)</span>
+                  </button>
+                  <button
+                    onClick={() => directQuickGalleryRef.current?.click()}
+                    disabled={isUploadingPhoto}
+                    className="px-3 py-2 bg-[#072A20] border border-[#C5A059]/60 text-[#C5A059] rounded-lg text-xs font-bold hover:bg-[#0b3d2e] flex items-center gap-1.5 shadow"
+                    title="Upload an image from device gallery or files"
+                  >
+                    <Upload className="w-4 h-4 text-[#C5A059]" />
+                    <span>Upload from Gallery</span>
+                  </button>
+                  <button
+                    onClick={() => setIsGalleryModalOpen(true)}
+                    className="px-3.5 py-2 bg-[#C5A059] text-[#072A20] rounded-lg text-xs font-bold hover:bg-[#d4af37] flex items-center gap-1.5 shadow"
+                  >
+                    <Plus className="w-4 h-4" /> Add with Details
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1690,34 +1899,156 @@ export default function AdminControlCenterPage() {
                 </div>
               </div>
 
-              {/* IMAGE URL & MEDIA GALLERY PICKER */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-[#C5A059] font-bold uppercase tracking-wider">
-                    Product Image (URL or Pick From Gallery)
-                  </label>
+              {/* DIRECT CAMERA, DEVICE GALLERY & IMAGE PREVIEW HUB */}
+              <div className="p-4 rounded-2xl bg-[#072A20]/80 border border-[#C5A059]/40 space-y-3">
+                {/* Hidden file inputs for direct camera capture and device gallery selection */}
+                <input
+                  ref={productCameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleProductImageFile(file);
+                    e.target.value = '';
+                  }}
+                />
+                <input
+                  ref={productGalleryInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleProductImageFile(file);
+                    e.target.value = '';
+                  }}
+                />
+
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <label className="text-[#C5A059] font-bold uppercase tracking-wider text-xs flex items-center gap-1.5">
+                      <LucideImage className="w-4 h-4 text-[#C5A059]" /> Garment Photography *
+                    </label>
+                    <span className="text-[11px] text-gray-400 block">
+                      Snap live with camera or choose from your phone/computer gallery
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setShowUrlInput(!showUrlInput)}
+                      className="text-[11px] text-gray-400 hover:text-white underline"
+                    >
+                      {showUrlInput ? 'Hide Web URL' : 'Use Web URL'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Primary Upload Action Buttons */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => productCameraInputRef.current?.click()}
+                    disabled={isUploadingPhoto}
+                    className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-[#051712] border border-emerald-500/70 hover:border-emerald-400 text-emerald-400 font-bold text-xs shadow hover:bg-emerald-950/40 transition-all"
+                  >
+                    <Camera className="w-4 h-4 text-emerald-400" />
+                    <span>Take Photo (Camera)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => productGalleryInputRef.current?.click()}
+                    disabled={isUploadingPhoto}
+                    className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-[#051712] border border-[#C5A059] hover:border-[#dfbc7a] text-[#C5A059] font-bold text-xs shadow hover:bg-[#072A20] transition-all"
+                  >
+                    <Upload className="w-4 h-4 text-[#C5A059]" />
+                    <span>Upload Device Gallery</span>
+                  </button>
+
                   <button
                     type="button"
                     onClick={() => setShowGalleryPicker(!showGalleryPicker)}
-                    className="text-xs text-[#C5A059] hover:underline flex items-center gap-1"
+                    className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-[#051712] border border-[#C5A059]/40 hover:border-[#C5A059] text-gray-300 font-bold text-xs shadow hover:bg-[#072A20] transition-all"
                   >
-                    <LucideImage className="w-3.5 h-3.5" />
-                    {showGalleryPicker ? 'Hide Gallery Picker' : 'Pick from Gallery'}
+                    <LucideImage className="w-4 h-4 text-amber-300" />
+                    <span>{showGalleryPicker ? 'Close Library' : 'Boutique Library'}</span>
                   </button>
                 </div>
-                <input
-                  type="url"
-                  required
-                  value={productForm.imageUrl}
-                  onChange={(e) => setProductForm({ ...productForm, imageUrl: e.target.value })}
-                  className="w-full bg-[#072A20] border border-[#C5A059]/40 rounded-xl p-2.5 text-white text-xs font-mono focus:outline-none focus:border-[#C5A059]"
-                  placeholder="https://images.unsplash.com/..."
-                />
 
-                {/* Inline Gallery Picker */}
+                {/* Uploading progress indicator */}
+                {isUploadingPhoto && (
+                  <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/50 text-emerald-300 text-xs animate-pulse">
+                    <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+                    <span>Processing &amp; optimizing image for storefront catalog...</span>
+                  </div>
+                )}
+
+                {/* Live Preview Card */}
+                {productForm.imageUrl && (
+                  <div className="flex items-center gap-3 p-3 bg-[#051712] rounded-xl border border-[#C5A059]/50">
+                    <img
+                      src={productForm.imageUrl}
+                      alt="Garment Preview"
+                      className="w-16 h-20 object-cover rounded-lg border border-[#C5A059]/40 shrink-0 shadow"
+                    />
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] uppercase font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800">
+                          Active Garment Photo
+                        </span>
+                        <span className="text-[10px] text-gray-400 truncate">
+                          Will display on storefront &amp; catalog
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-gray-300 font-mono truncate">
+                        {productForm.imageUrl.startsWith('data:') ? 'Local High-Res Photo (Compressed Base64)' : productForm.imageUrl}
+                      </p>
+                      <div className="flex items-center gap-2 pt-0.5">
+                        <button
+                          type="button"
+                          onClick={() => productGalleryInputRef.current?.click()}
+                          className="text-[11px] text-[#C5A059] hover:underline"
+                        >
+                          Change Photo
+                        </button>
+                        <span className="text-gray-600">&bull;</span>
+                        <button
+                          type="button"
+                          onClick={() => productCameraInputRef.current?.click()}
+                          className="text-[11px] text-emerald-400 hover:underline"
+                        >
+                          Retake Camera
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Collapsible Web URL input */}
+                {showUrlInput && (
+                  <div className="pt-2 border-t border-[#C5A059]/20 animate-fadeIn">
+                    <label className="text-[11px] text-gray-400 block mb-1">
+                      Or paste an external high-resolution web image link:
+                    </label>
+                    <input
+                      type="url"
+                      value={productForm.imageUrl}
+                      onChange={(e) => setProductForm({ ...productForm, imageUrl: e.target.value })}
+                      className="w-full bg-[#051712] border border-[#C5A059]/40 rounded-xl p-2.5 text-white text-xs font-mono focus:outline-none focus:border-[#C5A059]"
+                      placeholder="https://images.unsplash.com/..."
+                    />
+                  </div>
+                )}
+
+                {/* Inline Boutique Gallery Picker */}
                 {showGalleryPicker && (
-                  <div className="mt-3 p-3 bg-[#051712] rounded-xl border border-[#C5A059]/30 space-y-2 animate-fadeIn">
-                    <span className="text-[11px] text-gray-400 block">Click any boutique image to select it:</span>
+                  <div className="p-3 bg-[#051712] rounded-xl border border-[#C5A059]/30 space-y-2 animate-fadeIn">
+                    <span className="text-[11px] text-gray-400 block font-serif">
+                      Click any boutique library photo to select it for this garment:
+                    </span>
                     <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                       {mediaGallery.map((med) => (
                         <div
@@ -1828,18 +2159,92 @@ export default function AdminControlCenterPage() {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-[#C5A059] font-bold uppercase tracking-wider mb-1">
-                  Image URL / Link *
-                </label>
+              {/* DIRECT CAMERA & DEVICE GALLERY FOR MEDIA MODAL */}
+              <div className="p-3.5 rounded-2xl bg-[#072A20] border border-[#C5A059]/40 space-y-2.5">
                 <input
-                  type="url"
-                  required
-                  value={galleryForm.imageUrl}
-                  onChange={(e) => setGalleryForm({ ...galleryForm, imageUrl: e.target.value })}
-                  className="w-full bg-[#072A20] border border-[#C5A059]/40 rounded-xl p-2.5 text-white font-mono text-xs focus:outline-none focus:border-[#C5A059]"
-                  placeholder="https://images.unsplash.com/..."
+                  ref={galleryCameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleGalleryImageFile(file);
+                    e.target.value = '';
+                  }}
                 />
+                <input
+                  ref={galleryFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleGalleryImageFile(file);
+                    e.target.value = '';
+                  }}
+                />
+
+                <label className="block text-[#C5A059] font-bold uppercase tracking-wider text-[11px]">
+                  Image Source (Camera or Local Gallery) *
+                </label>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => galleryCameraInputRef.current?.click()}
+                    disabled={isUploadingPhoto}
+                    className="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl bg-[#051712] border border-emerald-500/60 hover:border-emerald-400 text-emerald-400 font-bold text-xs shadow hover:bg-emerald-950/40"
+                  >
+                    <Camera className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Take Camera Photo</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => galleryFileInputRef.current?.click()}
+                    disabled={isUploadingPhoto}
+                    className="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl bg-[#051712] border border-[#C5A059] hover:border-[#dfbc7a] text-[#C5A059] font-bold text-xs shadow hover:bg-[#072A20]"
+                  >
+                    <Upload className="w-3.5 h-3.5 text-[#C5A059]" />
+                    <span>Device Gallery</span>
+                  </button>
+                </div>
+
+                {/* Uploading indicator */}
+                {isUploadingPhoto && (
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-emerald-950/60 border border-emerald-500/50 text-emerald-300 text-[11px] animate-pulse">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-400" />
+                    <span>Compressing and formatting photo...</span>
+                  </div>
+                )}
+
+                {/* Live Preview Box */}
+                {galleryForm.imageUrl && (
+                  <div className="flex items-center gap-3 p-2 bg-[#051712] rounded-xl border border-[#C5A059]/40">
+                    <img
+                      src={galleryForm.imageUrl}
+                      alt="Gallery Preview"
+                      className="w-12 h-14 object-cover rounded-lg border border-[#C5A059]/30 shrink-0 shadow"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[10px] text-emerald-400 font-bold block">Photo Ready</span>
+                      <p className="text-[10px] text-gray-400 font-mono truncate">{galleryForm.imageUrl}</p>
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <span className="text-[10px] text-gray-400 block mb-1">Or enter an image link:</span>
+                  <input
+                    type="url"
+                    required
+                    value={galleryForm.imageUrl}
+                    onChange={(e) => setGalleryForm({ ...galleryForm, imageUrl: e.target.value })}
+                    className="w-full bg-[#051712] border border-[#C5A059]/40 rounded-xl p-2 text-white font-mono text-[11px] focus:outline-none focus:border-[#C5A059]"
+                    placeholder="https://images.unsplash.com/..."
+                  />
+                </div>
               </div>
 
               {/* Sample Photo Presets to Click */}
