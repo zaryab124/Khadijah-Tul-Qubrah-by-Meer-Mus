@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import PortalGuard from '../../components/PortalGuard';
 import {
@@ -35,7 +35,19 @@ import {
   Trash2,
   Eye,
   Lock,
+  Edit,
+  Upload,
+  Image as LucideImage,
+  Copy,
+  PackageCheck,
 } from 'lucide-react';
+import {
+  fetchProductsFromSupabase,
+  fetchMediaGalleryFromSupabase,
+  createProductInSupabase,
+  updateProductInSupabase,
+  addMediaGalleryItem,
+} from '../../lib/supabase';
 
 type AdminTab =
   | 'overview'
@@ -50,6 +62,7 @@ type AdminTab =
 type CatalogueSubTab =
   | 'products'
   | 'categories'
+  | 'media-gallery'
   | 'colours'
   | 'sizes'
   | 'size-charts'
@@ -80,13 +93,171 @@ export default function AdminControlCenterPage() {
 
   const [actionSuccessMessage, setActionSuccessMessage] = useState<string | null>(null);
 
-  // Mock Master Data for Configurable Business Management
+  // Garment Products with Stitched vs Unstitched Pricing Criteria
   const [products, setProducts] = useState([
-    { id: 'prod-1', name: 'Zardozi Velvet Peshwas', sku: 'KTQ-PESH-001', category: 'Bridal', price: 485000, isActive: true },
-    { id: 'prod-2', name: 'Bespoke Tilla Silk Anarkali', sku: 'KTQ-ANAR-002', category: 'Haute Couture', price: 340000, isActive: true },
-    { id: 'prod-3', name: 'Marori Raw Silk Lehenga', sku: 'KTQ-LEH-003', category: 'Bridal', price: 620000, isActive: true },
-    { id: 'prod-4', name: 'Handcrafted Organza Dupatta', sku: 'KTQ-DUP-004', category: 'Luxury Pret', price: 115000, isActive: false },
+    {
+      id: 'prod-1',
+      name: 'The Emerald Zardozi Peshwas',
+      sku: 'KTQ-PESH-001',
+      category: 'Bridal Couture',
+      unstitchedPrice: 345000,
+      stitchedPrice: 485000,
+      price: 485000,
+      fabric: 'Micro Velvet 9000 & Loomed Silk',
+      craft: '24k Metallic Tilla & Antique Zardozi',
+      imageUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80',
+      description: 'Sculpted from imperial Micro Velvet 9000 in jewel-toned emerald. Paired with pure silk organza dupatta.',
+      isActive: true,
+    },
+    {
+      id: 'prod-2',
+      name: 'Bespoke Tilla Silk Anarkali',
+      sku: 'KTQ-ANAR-002',
+      category: 'Haute Couture',
+      unstitchedPrice: 240000,
+      stitchedPrice: 340000,
+      price: 340000,
+      fabric: 'Pure Katan Silk (32 Kalis)',
+      craft: 'Marori Threadwork & Dabka Cuffs',
+      imageUrl: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1200&q=80',
+      description: 'Flowing pure Katan silk silhouette with 32 hand-pleated kalis.',
+      isActive: true,
+    },
+    {
+      id: 'prod-3',
+      name: 'Marori Raw Silk Lehenga Set',
+      sku: 'KTQ-LEH-003',
+      category: 'Bridal Couture',
+      unstitchedPrice: 440000,
+      stitchedPrice: 620000,
+      price: 620000,
+      fabric: '80g Hand-Loomed Raw Silk',
+      craft: 'Heavy Cutwork & Kora Dabka Zardozi',
+      imageUrl: 'https://images.unsplash.com/photo-1594223274512-ad4803739b7c?auto=format&fit=crop&w=1200&q=80',
+      description: 'Regal bridal lehenga set crafted on hand-loomed 80g raw silk.',
+      isActive: true,
+    },
+    {
+      id: 'prod-4',
+      name: 'Handcrafted Organza Dupatta & Kurta',
+      sku: 'KTQ-DUP-004',
+      category: 'Luxury Pret',
+      unstitchedPrice: 75000,
+      stitchedPrice: 115000,
+      price: 115000,
+      fabric: 'Pure French Silk Organza',
+      craft: 'Resham Jaal & Freshwater Pearls',
+      imageUrl: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=1200&q=80',
+      description: 'Delicate French silk organza shirt and dupatta adorned with hand-stitched seed pearls.',
+      isActive: false,
+    },
   ]);
+
+  // Media Gallery Photos Managed by Admin
+  const [mediaGallery, setMediaGallery] = useState([
+    {
+      id: 'med-1',
+      title: 'Emerald Velvet Peshwas - Front View',
+      imageUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80',
+      category: 'Bridal Couture',
+    },
+    {
+      id: 'med-2',
+      title: 'Bespoke Tilla Silk Anarkali - Mughal Jaal',
+      imageUrl: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1200&q=80',
+      category: 'Haute Couture',
+    },
+    {
+      id: 'med-3',
+      title: 'Marori Raw Silk Bridal Lehenga',
+      imageUrl: 'https://images.unsplash.com/photo-1594223274512-ad4803739b7c?auto=format&fit=crop&w=1200&q=80',
+      category: 'Bridal Couture',
+    },
+    {
+      id: 'med-4',
+      title: 'French Silk Organza Kurta & Dupatta',
+      imageUrl: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=1200&q=80',
+      category: 'Luxury Pret',
+    },
+    {
+      id: 'med-5',
+      title: 'Imperial Crimson Farshi Gharara',
+      imageUrl: 'https://images.unsplash.com/photo-1518049362265-d5b2a6467637?auto=format&fit=crop&w=1200&q=80',
+      category: 'Bridal Couture',
+    },
+    {
+      id: 'med-6',
+      title: 'Gold Tissue Saree Pallu Handwork',
+      imageUrl: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&w=1200&q=80',
+      category: 'Formal Atelier',
+    },
+  ]);
+
+  // Product Add / Edit Modal State
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any | null>(null);
+  const [showGalleryPicker, setShowGalleryPicker] = useState(false);
+  const [productForm, setProductForm] = useState({
+    name: '',
+    sku: '',
+    category: 'Bridal Couture',
+    stitchedPrice: 485000,
+    unstitchedPrice: 345000,
+    fabric: 'Micro Velvet 9000 & Loomed Silk',
+    craft: '24k Metallic Tilla & Antique Zardozi',
+    imageUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80',
+    description: '',
+  });
+
+  // Media Gallery Upload / Add Modal State
+  const [isGalleryModalOpen, setIsGalleryModalOpen] = useState(false);
+  const [galleryForm, setGalleryForm] = useState({
+    title: '',
+    category: 'Bridal Couture',
+    imageUrl: '',
+  });
+
+  // Fetch initial data from Supabase
+  useEffect(() => {
+    async function loadSupabaseData() {
+      try {
+        const remoteProducts = await fetchProductsFromSupabase();
+        if (remoteProducts && remoteProducts.length > 0) {
+          setProducts(
+            remoteProducts.map((rp) => ({
+              id: rp.id || rp.sku,
+              name: rp.name,
+              sku: rp.sku,
+              category: rp.category,
+              unstitchedPrice: Number(rp.unstitched_price),
+              stitchedPrice: Number(rp.stitched_price),
+              price: Number(rp.stitched_price),
+              fabric: rp.fabric,
+              craft: rp.craft,
+              imageUrl: rp.image_url,
+              description: rp.description || '',
+              isActive: rp.is_active ?? true,
+            }))
+          );
+        }
+
+        const remoteMedia = await fetchMediaGalleryFromSupabase();
+        if (remoteMedia && remoteMedia.length > 0) {
+          setMediaGallery(
+            remoteMedia.map((rm) => ({
+              id: rm.id || String(Math.random()),
+              title: rm.title,
+              imageUrl: rm.image_url,
+              category: rm.category || 'Bridal Couture',
+            }))
+          );
+        }
+      } catch (err) {
+        console.warn('Supabase initial fetch in admin:', err);
+      }
+    }
+    loadSupabaseData();
+  }, []);
 
   const [categories, setCategories] = useState([
     { id: 'cat-1', name: 'Bridal Couture', slug: 'bridal-couture', productsCount: 14 },
@@ -182,6 +353,159 @@ export default function AdminControlCenterPage() {
 
     setConfirmModal({ ...confirmModal, isOpen: false });
     setActionSuccessMessage(`Successfully updated "${entityName}" with verified audit logging.`);
+    setTimeout(() => setActionSuccessMessage(null), 4000);
+  };
+
+  const handleEditProductClick = (prod: any) => {
+    setEditingProduct(prod);
+    setProductForm({
+      name: prod.name,
+      sku: prod.sku,
+      category: prod.category,
+      stitchedPrice: prod.stitchedPrice || prod.price,
+      unstitchedPrice: prod.unstitchedPrice || Math.round((prod.stitchedPrice || prod.price) * 0.72),
+      fabric: prod.fabric || 'Micro Velvet 9000 & Loomed Silk',
+      craft: prod.craft || '24k Metallic Tilla & Antique Zardozi',
+      imageUrl: prod.imageUrl || '',
+      description: prod.description || '',
+    });
+    setIsProductModalOpen(true);
+  };
+
+  const handleAddNewProductClick = () => {
+    setEditingProduct(null);
+    setProductForm({
+      name: '',
+      sku: `KTQ-${Date.now().toString().slice(-4)}`,
+      category: 'Bridal Couture',
+      stitchedPrice: 480000,
+      unstitchedPrice: 340000,
+      fabric: 'Micro Velvet 9000 & Loomed Silk',
+      craft: '24k Metallic Tilla & Antique Zardozi',
+      imageUrl: mediaGallery[0]?.imageUrl || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80',
+      description: '',
+    });
+    setIsProductModalOpen(true);
+  };
+
+  const handleSaveProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!productForm.name || !productForm.sku) {
+      alert('Please enter product name and SKU');
+      return;
+    }
+
+    const sPrice = Number(productForm.stitchedPrice);
+    const uPrice = Number(productForm.unstitchedPrice);
+
+    if (editingProduct) {
+      setProducts((prev) =>
+        prev.map((p) =>
+          p.id === editingProduct.id
+            ? {
+                ...p,
+                name: productForm.name,
+                sku: productForm.sku,
+                category: productForm.category,
+                stitchedPrice: sPrice,
+                unstitchedPrice: uPrice,
+                price: sPrice,
+                fabric: productForm.fabric,
+                craft: productForm.craft,
+                imageUrl: productForm.imageUrl,
+                description: productForm.description,
+              }
+            : p
+        )
+      );
+
+      try {
+        await updateProductInSupabase(editingProduct.id, {
+          name: productForm.name,
+          sku: productForm.sku,
+          category: productForm.category,
+          stitched_price: sPrice,
+          unstitched_price: uPrice,
+          fabric: productForm.fabric,
+          craft: productForm.craft,
+          image_url: productForm.imageUrl,
+          description: productForm.description,
+        });
+      } catch (err) {
+        console.warn('Supabase update sync:', err);
+      }
+      setActionSuccessMessage(`Updated product "${productForm.name}" with Stitched & Unstitched prices.`);
+    } else {
+      const newProd = {
+        id: `prod-${Date.now()}`,
+        name: productForm.name,
+        sku: productForm.sku,
+        category: productForm.category,
+        stitchedPrice: sPrice,
+        unstitchedPrice: uPrice,
+        price: sPrice,
+        fabric: productForm.fabric,
+        craft: productForm.craft,
+        imageUrl: productForm.imageUrl,
+        description: productForm.description,
+        isActive: true,
+      };
+
+      setProducts((prev) => [newProd, ...prev]);
+
+      try {
+        await createProductInSupabase({
+          name: productForm.name,
+          sku: productForm.sku,
+          category: productForm.category,
+          stitched_price: sPrice,
+          unstitched_price: uPrice,
+          fabric: productForm.fabric,
+          craft: productForm.craft,
+          image_url: productForm.imageUrl,
+          description: productForm.description,
+          is_active: true,
+        });
+      } catch (err) {
+        console.warn('Supabase create sync:', err);
+      }
+      setActionSuccessMessage(`Created new garment "${productForm.name}" successfully.`);
+    }
+
+    setIsProductModalOpen(false);
+    setEditingProduct(null);
+    setTimeout(() => setActionSuccessMessage(null), 4000);
+  };
+
+  const handleSaveMedia = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!galleryForm.title || !galleryForm.imageUrl) {
+      alert('Please enter title and image URL');
+      return;
+    }
+
+    const newMedia = {
+      id: `med-${Date.now()}`,
+      title: galleryForm.title,
+      imageUrl: galleryForm.imageUrl,
+      category: galleryForm.category,
+    };
+
+    setMediaGallery((prev) => [newMedia, ...prev]);
+
+    try {
+      await addMediaGalleryItem({
+        title: galleryForm.title,
+        image_url: galleryForm.imageUrl,
+        category: galleryForm.category,
+      });
+    } catch (err) {
+      console.warn('Supabase gallery save:', err);
+    }
+
+    setIsGalleryModalOpen(false);
+    setGalleryForm({ title: '', category: 'Bridal Couture', imageUrl: '' });
+    setActionSuccessMessage(`Added image "${newMedia.title}" to Media Gallery.`);
     setTimeout(() => setActionSuccessMessage(null), 4000);
   };
 
@@ -464,10 +788,11 @@ export default function AdminControlCenterPage() {
       {/* TAB 2: CATALOGUE & MASTER DATA (PRODUCTS, CATEGORIES, COLOURS, SIZES, SIZE CHARTS, FABRICS, CRAFT OPTIONS) */}
       {activeTab === 'catalogue' && (
         <div className="space-y-6">
-          {/* Sub-Tabs for all 7 Prompt-Requested Modules */}
+          {/* Sub-Tabs for all Prompt-Requested Modules */}
           <div className="flex flex-wrap gap-2 p-1.5 rounded-lg bg-[#051c15] border border-[#C5A059]/30">
             {[
               { key: 'products', label: 'Products', icon: Package },
+              { key: 'media-gallery', label: 'Media Gallery', icon: LucideImage },
               { key: 'categories', label: 'Categories', icon: Layers },
               { key: 'colours', label: 'Colours', icon: Palette },
               { key: 'sizes', label: 'Sizes', icon: Ruler },
@@ -483,7 +808,7 @@ export default function AdminControlCenterPage() {
                   onClick={() => setCatalogueSubTab(sub.key as CatalogueSubTab)}
                   className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition ${
                     isSelected
-                      ? 'bg-[#C5A059] text-[#072A20] font-semibold'
+                      ? 'bg-[#C5A059] text-[#072A20] font-semibold shadow'
                       : 'text-gray-300 hover:bg-[#072A20]'
                   }`}
                 >
@@ -497,13 +822,20 @@ export default function AdminControlCenterPage() {
           {/* Sub-tab 1: PRODUCTS */}
           {catalogueSubTab === 'products' && (
             <div className="p-6 rounded-xl bg-[#051c15] border border-[#C5A059]/30">
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-6">
                 <div>
-                  <h3 className="text-lg font-serif text-[#FCFBF7]">Garment Products</h3>
-                  <p className="text-xs text-gray-400">Manage ready-to-wear and customizable catalog pieces</p>
+                  <h3 className="text-lg font-serif text-[#FCFBF7] flex items-center gap-2">
+                    <Package className="w-5 h-5 text-[#C5A059]" /> Garment Products Catalogue
+                  </h3>
+                  <p className="text-xs text-gray-400">
+                    Configure luxury dresses with separate Stitched vs. Unstitched pricing criteria &amp; imagery
+                  </p>
                 </div>
-                <button className="px-3.5 py-1.5 bg-[#C5A059] text-[#072A20] rounded-lg text-xs font-semibold hover:bg-[#d4af37] flex items-center gap-1.5">
-                  <Plus className="w-4 h-4" /> Add Product
+                <button
+                  onClick={handleAddNewProductClick}
+                  className="px-3.5 py-2 bg-[#C5A059] text-[#072A20] rounded-lg text-xs font-bold hover:bg-[#d4af37] flex items-center gap-1.5 shadow"
+                >
+                  <Plus className="w-4 h-4" /> Add New Garment
                 </button>
               </div>
 
@@ -514,18 +846,40 @@ export default function AdminControlCenterPage() {
                       <th className="p-3">Product Name</th>
                       <th className="p-3">SKU</th>
                       <th className="p-3">Category</th>
-                      <th className="p-3">Price</th>
+                      <th className="p-3">Unstitched Price</th>
+                      <th className="p-3">Stitched Price</th>
                       <th className="p-3">Status</th>
                       <th className="p-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-800">
                     {products.map((p) => (
-                      <tr key={p.id}>
-                        <td className="p-3 font-medium text-white">{p.name}</td>
+                      <tr key={p.id} className="hover:bg-[#072A20]/30 transition-colors">
+                        <td className="p-3 font-medium text-white">
+                          <div className="flex items-center gap-3">
+                            <img
+                              src={p.imageUrl}
+                              alt={p.name}
+                              className="w-10 h-12 object-cover rounded-lg border border-[#C5A059]/30 shrink-0"
+                            />
+                            <div>
+                              <div className="font-serif font-bold">{p.name}</div>
+                              <span className="text-[11px] text-gray-400 block">{p.fabric}</span>
+                            </div>
+                          </div>
+                        </td>
                         <td className="p-3 font-mono text-xs text-gray-400">{p.sku}</td>
-                        <td className="p-3">{p.category}</td>
-                        <td className="p-3 font-semibold text-[#C5A059]">PKR {p.price.toLocaleString()}</td>
+                        <td className="p-3">
+                          <span className="px-2 py-0.5 rounded text-[10px] bg-[#072A20] text-[#C5A059] border border-[#C5A059]/30">
+                            {p.category}
+                          </span>
+                        </td>
+                        <td className="p-3 font-semibold text-amber-400 font-mono">
+                          PKR {(p.unstitchedPrice || Math.round(p.price * 0.72)).toLocaleString()}
+                        </td>
+                        <td className="p-3 font-semibold text-[#C5A059] font-mono">
+                          PKR {(p.stitchedPrice || p.price).toLocaleString()}
+                        </td>
                         <td className="p-3">
                           <span
                             className={`px-2 py-0.5 rounded text-xs ${
@@ -538,19 +892,108 @@ export default function AdminControlCenterPage() {
                           </span>
                         </td>
                         <td className="p-3 text-right">
-                          {p.isActive && (
+                          <div className="flex items-center justify-end gap-2">
                             <button
-                              onClick={() => triggerDeactivateConfirm('products', p.id, p.name)}
-                              className="text-xs text-red-400 hover:text-red-300 underline flex items-center gap-1 ml-auto"
+                              onClick={() => handleEditProductClick(p)}
+                              className="text-xs text-[#C5A059] hover:underline flex items-center gap-1 font-semibold"
                             >
-                              <Trash2 className="w-3.5 h-3.5" /> Deactivate
+                              <Edit className="w-3.5 h-3.5" /> Edit
                             </button>
-                          )}
+                            {p.isActive && (
+                              <button
+                                onClick={() => triggerDeactivateConfirm('products', p.id, p.name)}
+                                className="text-xs text-red-400 hover:text-red-300 underline flex items-center gap-1 ml-2"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" /> Deactivate
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          )}
+
+          {/* Sub-tab: MEDIA GALLERY (Photos Uploaded & Managed by Admin) */}
+          {catalogueSubTab === 'media-gallery' && (
+            <div className="p-6 rounded-xl bg-[#051c15] border border-[#C5A059]/30 space-y-6">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                <div>
+                  <h3 className="text-lg font-serif text-[#FCFBF7] flex items-center gap-2">
+                    <LucideImage className="w-5 h-5 text-[#C5A059]" /> Boutique Media Gallery
+                  </h3>
+                  <p className="text-xs text-gray-400">
+                    High-definition catalog photography, detail close-ups, and fabric swatches uploaded by Admin
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsGalleryModalOpen(true)}
+                  className="px-3.5 py-2 bg-[#C5A059] text-[#072A20] rounded-lg text-xs font-bold hover:bg-[#d4af37] flex items-center gap-1.5 shadow"
+                >
+                  <Upload className="w-4 h-4" /> Add Photo to Gallery
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {mediaGallery.map((med) => (
+                  <div
+                    key={med.id}
+                    className="group relative rounded-xl overflow-hidden border border-[#C5A059]/30 bg-[#072A20]/40 flex flex-col justify-between"
+                  >
+                    <div className="aspect-[3/4] w-full overflow-hidden bg-black/40 relative">
+                      <img
+                        src={med.imageUrl}
+                        alt={med.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      <span className="absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-bold bg-[#051712]/90 text-[#C5A059] border border-[#C5A059]/40">
+                        {med.category}
+                      </span>
+                    </div>
+                    <div className="p-3 bg-[#051712] border-t border-[#C5A059]/20 flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <h4 className="text-xs font-serif font-bold text-white truncate">{med.title}</h4>
+                        <span className="text-[10px] text-gray-400 truncate block">Ready for Catalog</span>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(med.imageUrl);
+                            setActionSuccessMessage(`Copied photo URL to clipboard!`);
+                            setTimeout(() => setActionSuccessMessage(null), 3000);
+                          }}
+                          className="p-1.5 rounded-lg bg-[#072A20] hover:bg-[#0b3d2e] text-[#C5A059] border border-[#C5A059]/30"
+                          title="Copy Image URL"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingProduct(null);
+                            setProductForm({
+                              name: med.title,
+                              sku: `KTQ-${Date.now().toString().slice(-4)}`,
+                              category: med.category || 'Bridal Couture',
+                              stitchedPrice: 480000,
+                              unstitchedPrice: 340000,
+                              fabric: 'Micro Velvet 9000 & Loomed Silk',
+                              craft: '24k Metallic Tilla & Antique Zardozi',
+                              imageUrl: med.imageUrl,
+                              description: `Handcrafted ${med.title} featuring intricate artisan needlework and luxury fabric yardage.`,
+                            });
+                            setIsProductModalOpen(true);
+                          }}
+                          className="px-2 py-1 rounded-lg bg-[#C5A059] text-[#072A20] text-[10px] font-bold hover:bg-[#d4af37]"
+                        >
+                          Use in Product
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -1113,6 +1556,354 @@ export default function AdminControlCenterPage() {
                 Confirm Controlled Deactivation
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* PRODUCT ADD / EDIT MODAL WITH STITCHED & UNSTITCHED PRICING */}
+      {isProductModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fadeIn">
+          <div className="relative w-full max-w-2xl bg-[#051712] border-2 border-[#C5A059]/60 rounded-3xl p-6 md:p-8 shadow-2xl text-[#FCFBF7] max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setIsProductModalOpen(false)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-[#072A20] text-gray-400 hover:text-white border border-[#C5A059]/30"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="mb-6">
+              <span className="text-[10px] tracking-widest text-[#C5A059] font-bold uppercase block">
+                ATELIER CATALOGUE MANAGEMENT
+              </span>
+              <h3 className="text-2xl font-serif font-bold text-white mt-1">
+                {editingProduct ? 'Edit Garment Product' : 'Add New Garment Product'}
+              </h3>
+              <p className="text-xs text-gray-400 mt-1">
+                Configure both Stitched and Non-Stitching (Unstitched) pricing criteria, fabrics, and gallery images.
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveProduct} className="space-y-4 text-xs">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[#C5A059] font-bold uppercase tracking-wider mb-1">
+                    Garment Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={productForm.name}
+                    onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
+                    className="w-full bg-[#072A20] border border-[#C5A059]/40 rounded-xl p-2.5 text-white focus:outline-none focus:border-[#C5A059]"
+                    placeholder="e.g. Royal Emerald Peshwas"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[#C5A059] font-bold uppercase tracking-wider mb-1">
+                    SKU Code *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={productForm.sku}
+                    onChange={(e) => setProductForm({ ...productForm, sku: e.target.value })}
+                    className="w-full bg-[#072A20] border border-[#C5A059]/40 rounded-xl p-2.5 text-white font-mono focus:outline-none focus:border-[#C5A059]"
+                    placeholder="KTQ-PESH-005"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[#C5A059] font-bold uppercase tracking-wider mb-1">
+                  Couture Category
+                </label>
+                <select
+                  value={productForm.category}
+                  onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
+                  className="w-full bg-[#072A20] border border-[#C5A059]/40 rounded-xl p-2.5 text-white focus:outline-none focus:border-[#C5A059]"
+                >
+                  <option value="Bridal Couture">Bridal Couture</option>
+                  <option value="Haute Couture">Haute Couture</option>
+                  <option value="Luxury Pret">Luxury Pret</option>
+                  <option value="Formal Atelier">Formal Atelier</option>
+                </select>
+              </div>
+
+              {/* DUAL PRICING CRITERIA: STITCHED VS UNSTITCHED */}
+              <div className="p-4 rounded-2xl bg-[#072A20] border border-[#C5A059]/40 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-amber-400 font-bold uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                    <PackageCheck className="w-3.5 h-3.5" /> Unstitched Price (PKR) *
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min={1000}
+                    value={productForm.unstitchedPrice}
+                    onChange={(e) => setProductForm({ ...productForm, unstitchedPrice: Number(e.target.value) })}
+                    className="w-full bg-[#051712] border border-[#C5A059]/40 rounded-xl p-2.5 text-white font-mono font-bold focus:outline-none focus:border-[#C5A059]"
+                    placeholder="345000"
+                  />
+                  <span className="text-[10px] text-gray-400 mt-1 block">3-piece fabric yardage &amp; borders</span>
+                </div>
+                <div>
+                  <label className="block text-[#C5A059] font-bold uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                    <Scissors className="w-3.5 h-3.5" /> Stitched Price (PKR) *
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min={1000}
+                    value={productForm.stitchedPrice}
+                    onChange={(e) => setProductForm({ ...productForm, stitchedPrice: Number(e.target.value) })}
+                    className="w-full bg-[#051712] border border-[#C5A059]/40 rounded-xl p-2.5 text-white font-mono font-bold focus:outline-none focus:border-[#C5A059]"
+                    placeholder="485000"
+                  />
+                  <span className="text-[10px] text-gray-400 mt-1 block">Custom tailoring &amp; finishing</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[#C5A059] font-bold uppercase tracking-wider mb-1">
+                    Fabric
+                  </label>
+                  <input
+                    type="text"
+                    value={productForm.fabric}
+                    onChange={(e) => setProductForm({ ...productForm, fabric: e.target.value })}
+                    className="w-full bg-[#072A20] border border-[#C5A059]/40 rounded-xl p-2.5 text-white focus:outline-none focus:border-[#C5A059]"
+                    placeholder="Micro Velvet 9000 & Loomed Silk"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[#C5A059] font-bold uppercase tracking-wider mb-1">
+                    Handwork &amp; Craft
+                  </label>
+                  <input
+                    type="text"
+                    value={productForm.craft}
+                    onChange={(e) => setProductForm({ ...productForm, craft: e.target.value })}
+                    className="w-full bg-[#072A20] border border-[#C5A059]/40 rounded-xl p-2.5 text-white focus:outline-none focus:border-[#C5A059]"
+                    placeholder="24k Metallic Tilla & Antique Zardozi"
+                  />
+                </div>
+              </div>
+
+              {/* IMAGE URL & MEDIA GALLERY PICKER */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[#C5A059] font-bold uppercase tracking-wider">
+                    Product Image (URL or Pick From Gallery)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowGalleryPicker(!showGalleryPicker)}
+                    className="text-xs text-[#C5A059] hover:underline flex items-center gap-1"
+                  >
+                    <LucideImage className="w-3.5 h-3.5" />
+                    {showGalleryPicker ? 'Hide Gallery Picker' : 'Pick from Gallery'}
+                  </button>
+                </div>
+                <input
+                  type="url"
+                  required
+                  value={productForm.imageUrl}
+                  onChange={(e) => setProductForm({ ...productForm, imageUrl: e.target.value })}
+                  className="w-full bg-[#072A20] border border-[#C5A059]/40 rounded-xl p-2.5 text-white text-xs font-mono focus:outline-none focus:border-[#C5A059]"
+                  placeholder="https://images.unsplash.com/..."
+                />
+
+                {/* Inline Gallery Picker */}
+                {showGalleryPicker && (
+                  <div className="mt-3 p-3 bg-[#051712] rounded-xl border border-[#C5A059]/30 space-y-2 animate-fadeIn">
+                    <span className="text-[11px] text-gray-400 block">Click any boutique image to select it:</span>
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                      {mediaGallery.map((med) => (
+                        <div
+                          key={med.id}
+                          onClick={() => {
+                            setProductForm({ ...productForm, imageUrl: med.imageUrl });
+                            setShowGalleryPicker(false);
+                          }}
+                          className={`aspect-square rounded-lg overflow-hidden border cursor-pointer hover:scale-105 transition-all relative ${
+                            productForm.imageUrl === med.imageUrl
+                              ? 'border-[#C5A059] ring-2 ring-[#C5A059]'
+                              : 'border-[#C5A059]/30 opacity-75 hover:opacity-100'
+                          }`}
+                        >
+                          <img src={med.imageUrl} alt={med.title} className="w-full h-full object-cover" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-[#C5A059] font-bold uppercase tracking-wider mb-1">
+                  Description
+                </label>
+                <textarea
+                  rows={2}
+                  value={productForm.description}
+                  onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
+                  className="w-full bg-[#072A20] border border-[#C5A059]/40 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-[#C5A059]"
+                  placeholder="Detailed embroidery narrative, silhouette structure, and included pieces..."
+                />
+              </div>
+
+              <div className="pt-4 flex items-center justify-end gap-3 border-t border-[#C5A059]/20">
+                <button
+                  type="button"
+                  onClick={() => setIsProductModalOpen(false)}
+                  className="px-4 py-2.5 rounded-xl border border-gray-700 text-gray-300 hover:bg-gray-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 bg-[#C5A059] hover:bg-[#d4af37] text-[#051712] font-serif font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg"
+                >
+                  {editingProduct ? 'Save Changes' : 'Publish Garment'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MEDIA GALLERY UPLOAD / ADD PHOTO MODAL */}
+      {isGalleryModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fadeIn">
+          <div className="relative w-full max-w-md bg-[#051712] border-2 border-[#C5A059]/60 rounded-3xl p-6 shadow-2xl text-[#FCFBF7]">
+            <button
+              onClick={() => setIsGalleryModalOpen(false)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-[#072A20] text-gray-400 hover:text-white border border-[#C5A059]/30"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="mb-5">
+              <span className="text-[10px] tracking-widest text-[#C5A059] font-bold uppercase block">
+                MEDIA ASSETS ATELIER
+              </span>
+              <h3 className="text-xl font-serif font-bold text-white mt-1">
+                Add Photo to Gallery
+              </h3>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Upload luxury collection pictures or provide high-res URLs.
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveMedia} className="space-y-4 text-xs">
+              <div>
+                <label className="block text-[#C5A059] font-bold uppercase tracking-wider mb-1">
+                  Photo Title *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={galleryForm.title}
+                  onChange={(e) => setGalleryForm({ ...galleryForm, title: e.target.value })}
+                  className="w-full bg-[#072A20] border border-[#C5A059]/40 rounded-xl p-2.5 text-white focus:outline-none focus:border-[#C5A059]"
+                  placeholder="e.g. Royal Maroon Velvet Peshwas"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[#C5A059] font-bold uppercase tracking-wider mb-1">
+                  Category
+                </label>
+                <select
+                  value={galleryForm.category}
+                  onChange={(e) => setGalleryForm({ ...galleryForm, category: e.target.value })}
+                  className="w-full bg-[#072A20] border border-[#C5A059]/40 rounded-xl p-2.5 text-white focus:outline-none focus:border-[#C5A059]"
+                >
+                  <option value="Bridal Couture">Bridal Couture</option>
+                  <option value="Haute Couture">Haute Couture</option>
+                  <option value="Luxury Pret">Luxury Pret</option>
+                  <option value="Formal Atelier">Formal Atelier</option>
+                  <option value="Fabrics & Swatches">Fabrics &amp; Swatches</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[#C5A059] font-bold uppercase tracking-wider mb-1">
+                  Image URL / Link *
+                </label>
+                <input
+                  type="url"
+                  required
+                  value={galleryForm.imageUrl}
+                  onChange={(e) => setGalleryForm({ ...galleryForm, imageUrl: e.target.value })}
+                  className="w-full bg-[#072A20] border border-[#C5A059]/40 rounded-xl p-2.5 text-white font-mono text-xs focus:outline-none focus:border-[#C5A059]"
+                  placeholder="https://images.unsplash.com/..."
+                />
+              </div>
+
+              {/* Sample Photo Presets to Click */}
+              <div>
+                <span className="text-[10px] text-gray-400 block mb-1">Or pick a quick luxury preset:</span>
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setGalleryForm({
+                        ...galleryForm,
+                        imageUrl:
+                          'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80',
+                      })
+                    }
+                    className="px-2 py-1 rounded bg-[#072A20] text-[10px] text-[#C5A059] border border-[#C5A059]/30 hover:bg-[#0b3d2e]"
+                  >
+                    Emerald Velvet
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setGalleryForm({
+                        ...galleryForm,
+                        imageUrl:
+                          'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1200&q=80',
+                      })
+                    }
+                    className="px-2 py-1 rounded bg-[#072A20] text-[10px] text-[#C5A059] border border-[#C5A059]/30 hover:bg-[#0b3d2e]"
+                  >
+                    Silk Anarkali
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setGalleryForm({
+                        ...galleryForm,
+                        imageUrl:
+                          'https://images.unsplash.com/photo-1594223274512-ad4803739b7c?auto=format&fit=crop&w=1200&q=80',
+                      })
+                    }
+                    className="px-2 py-1 rounded bg-[#072A20] text-[10px] text-[#C5A059] border border-[#C5A059]/30 hover:bg-[#0b3d2e]"
+                  >
+                    Bridal Lehenga
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-4 flex items-center justify-end gap-3 border-t border-[#C5A059]/20">
+                <button
+                  type="button"
+                  onClick={() => setIsGalleryModalOpen(false)}
+                  className="px-4 py-2 rounded-xl border border-gray-700 text-gray-300 hover:bg-gray-800"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-[#C5A059] hover:bg-[#d4af37] text-[#051712] font-serif font-bold text-xs uppercase tracking-wider rounded-xl shadow-lg"
+                >
+                  Add Photo
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

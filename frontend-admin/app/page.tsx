@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -34,6 +34,7 @@ import {
   Crown,
   MapPin,
   Check,
+  PackageCheck,
 } from 'lucide-react';
 import { useAuth, DEMO_ACCOUNTS, UserRole } from '../lib/auth-context';
 import { Navbar } from '../components/Navbar';
@@ -42,20 +43,23 @@ import { ItemModal, GarmentProduct } from '../components/ItemModal';
 import { BespokeStudioModal } from '../components/BespokeStudioModal';
 import { BranchSelectorModal, AtelierBranch, ATELIER_BRANCHES } from '../components/BranchSelectorModal';
 import { Logo } from '../components/Logo';
+import { fetchProductsFromSupabase, submitCustomRequestToSupabase } from '../lib/supabase';
 
-
-// Product Interface
+// Product Interface with Stitched vs Unstitched Pricing
 interface Product {
   id: string;
   name: string;
   sku: string;
   category: string;
   basePrice: number;
+  stitchedPrice: number;
+  unstitchedPrice: number;
   fabric: string;
   craft: string;
   imageUrl: string;
   description: string;
   isCustomizable: boolean;
+  turnaroundDays?: string;
 }
 
 // Video Deal Campaign Interface
@@ -109,7 +113,6 @@ export default function HauteCoutureApp() {
   const [authSubmitting, setAuthSubmitting] = useState<boolean>(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState<boolean>(false);
 
-
   // Customer Shopping & Atelier State
   const router = useRouter();
   const [activeBranch, setActiveBranch] = useState<AtelierBranch>(ATELIER_BRANCHES[0]);
@@ -122,7 +125,7 @@ export default function HauteCoutureApp() {
   const [showSizeChart, setShowSizeChart] = useState<boolean>(false);
   const [selectedVideoDeal, setSelectedVideoDeal] = useState<VideoDeal | null>(null);
 
-  // Products Catalog (with dynamic add capability by Admin)
+  // Products Catalog (with Stitched & Unstitched Pricing Criteria)
   const [products, setProducts] = useState<Product[]>([
     {
       id: 'p-1',
@@ -130,11 +133,14 @@ export default function HauteCoutureApp() {
       sku: 'KTQ-PESH-001',
       category: 'Bridal Couture',
       basePrice: 485000,
+      stitchedPrice: 485000,
+      unstitchedPrice: 345000,
       fabric: 'Micro Velvet 9000 & Loomed Silk',
       craft: '24k Metallic Tilla & Antique Zardozi',
       imageUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80',
       description: 'Sculpted from imperial Micro Velvet 9000 in jewel-toned emerald. Hand-embellished by master karigars with gold needlework, dabka, and antique zardozi. Paired with pure silk organza dupatta.',
       isCustomizable: true,
+      turnaroundDays: '14 - 28 Days',
     },
     {
       id: 'p-2',
@@ -142,11 +148,14 @@ export default function HauteCoutureApp() {
       sku: 'KTQ-ANAR-002',
       category: 'Haute Couture',
       basePrice: 340000,
+      stitchedPrice: 340000,
+      unstitchedPrice: 240000,
       fabric: 'Pure Katan Silk (32 Kalis)',
       craft: 'Marori Threadwork & Dabka Cuffs',
       imageUrl: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1200&q=80',
       description: 'Flowing pure Katan silk silhouette with 32 hand-pleated kalis. Bodice embellished with floral Mughal jaal and finished with scalloped border embroidery.',
       isCustomizable: true,
+      turnaroundDays: '14 - 21 Days',
     },
     {
       id: 'p-3',
@@ -154,25 +163,62 @@ export default function HauteCoutureApp() {
       sku: 'KTQ-LEH-003',
       category: 'Bridal Couture',
       basePrice: 620000,
+      stitchedPrice: 620000,
+      unstitchedPrice: 440000,
       fabric: '80g Hand-Loomed Raw Silk',
       craft: 'Heavy Cutwork & Kora Dabka Zardozi',
       imageUrl: 'https://images.unsplash.com/photo-1594223274512-ad4803739b7c?auto=format&fit=crop&w=1200&q=80',
       description: 'Regal bridal lehenga set crafted on hand-loomed 80g raw silk. Adorned with geometric Mughal motifs executed in heavy cutwork and French knots.',
       isCustomizable: true,
+      turnaroundDays: '21 - 35 Days',
     },
     {
       id: 'p-4',
-      name: 'Handcrafted Tissue Organza Dupatta',
+      name: 'Handcrafted Tissue Organza Dupatta & Kurta',
       sku: 'KTQ-DUP-004',
       category: 'Luxury Pret',
       basePrice: 115000,
+      stitchedPrice: 115000,
+      unstitchedPrice: 75000,
       fabric: 'French Pure Silk Organza',
       craft: 'Silk Ribbon Appliqué & Gota Spray',
       imageUrl: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1200&q=80',
-      description: 'Featherlight sheer French silk organza shawl featuring hand-appliqued tissue borders, scalloped edging, and dispersed gota spray.',
+      description: 'Featherlight sheer French silk organza shirt and dupatta featuring hand-appliqued tissue borders, scalloped edging, and dispersed gota spray.',
       isCustomizable: false,
+      turnaroundDays: '7 - 14 Days',
     },
   ]);
+
+  // Connect & Fetch Live Catalog from Supabase
+  useEffect(() => {
+    async function loadCatalog() {
+      try {
+        const remoteProducts = await fetchProductsFromSupabase();
+        if (remoteProducts && remoteProducts.length > 0) {
+          setProducts(
+            remoteProducts.map((rp) => ({
+              id: rp.id || rp.sku,
+              name: rp.name,
+              sku: rp.sku,
+              category: rp.category,
+              basePrice: Number(rp.stitched_price),
+              stitchedPrice: Number(rp.stitched_price),
+              unstitchedPrice: Number(rp.unstitched_price),
+              fabric: rp.fabric,
+              craft: rp.craft,
+              imageUrl: rp.image_url,
+              description: rp.description || '',
+              isCustomizable: rp.is_customizable ?? true,
+              turnaroundDays: rp.turnaround_days || '14 - 28 Days',
+            }))
+          );
+        }
+      } catch (err) {
+        console.warn('Supabase storefront fetch (using built-in catalog):', err);
+      }
+    }
+    loadCatalog();
+  }, []);
 
   // Video Deals & Campaigns
   const [videoDeals, setVideoDeals] = useState<VideoDeal[]>([
@@ -283,15 +329,19 @@ export default function HauteCoutureApp() {
     setCartItems([]);
   };
 
-  const handleQuickAdd = (product: Product) => {
+  const handleQuickAdd = (product: Product, stitchingOption: 'STITCHED' | 'UNSTITCHED' = 'STITCHED') => {
+    const unitPrice = stitchingOption === 'STITCHED' ? product.stitchedPrice : product.unstitchedPrice;
     handleAddToCart({
       id: product.id,
       name: product.name,
       sku: product.sku,
       category: product.category,
-      basePrice: product.basePrice,
+      basePrice: unitPrice,
+      stitchingOption,
+      stitchedPrice: product.stitchedPrice,
+      unstitchedPrice: product.unstitchedPrice,
       imageUrl: product.imageUrl,
-      size: 'M (36" Bust)',
+      size: stitchingOption === 'STITCHED' ? 'M (36" Bust)' : 'Unstitched Fabric (3-Piece)',
       fabric: product.fabric,
       craft: product.craft,
       quantity: 1,
@@ -303,10 +353,11 @@ export default function HauteCoutureApp() {
   // Handle Create Your Own Submission
   const handleCustomSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const reqNum = `CDR-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
     const newCommission: CustomCommission = {
       id: `comm-${Date.now()}`,
-      requestNumber: `CDR-202609-00${commissions.length + 1}`,
-      customerName: 'Begum Sophia Al-Rashid',
+      requestNumber: reqNum,
+      customerName: user?.name || 'Valued Couture Client',
       productType: customForm.silhouette,
       fabric: customForm.fabric,
       craft: customForm.craft,
@@ -322,7 +373,25 @@ export default function HauteCoutureApp() {
     };
 
     setCommissions([newCommission, ...commissions]);
-    alert(`Bespoke commission request ${newCommission.requestNumber} submitted! The lead designer is formulating your quote.`);
+
+    // Asynchronously submit to Supabase
+    submitCustomRequestToSupabase({
+      request_number: reqNum,
+      customer_name: user?.name || 'Valued Couture Client',
+      silhouette: customForm.silhouette,
+      fabric: customForm.fabric,
+      craft: customForm.craft,
+      colour: customForm.colour,
+      stitching_type: 'STITCHED',
+      chest: customForm.chest,
+      waist: customForm.waist,
+      hip: customForm.hip,
+      length: customForm.length,
+      special_notes: customForm.notes,
+      status: 'PENDING_QUOTE',
+    }).catch((err) => console.warn('Supabase custom order submit:', err));
+
+    alert(`Custom Commission Request ${reqNum} registered with our Senior Designer! We will prepare your measurement quote shortly.`);
   };
 
   // Filtered Products
@@ -574,27 +643,42 @@ export default function HauteCoutureApp() {
                       </p>
                     </div>
 
-                    <div className="pt-2 border-t border-[#C5A059]/20 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] text-gray-400 uppercase tracking-wider">Price</span>
-                        <span className="text-base font-bold text-[#C5A059]">{formatPKR(product.basePrice)}</span>
+                    <div className="pt-2 border-t border-[#C5A059]/20 space-y-2.5">
+                      {/* Dual Price Criteria: Stitched vs Unstitched */}
+                      <div className="grid grid-cols-2 gap-2 bg-[#051712]/80 p-2 rounded-xl border border-[#C5A059]/20">
+                        <div>
+                          <span className="text-[9px] text-amber-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                            <PackageCheck className="w-2.5 h-2.5" /> Unstitched
+                          </span>
+                          <span className="text-xs font-bold text-amber-300 font-mono block">
+                            {formatPKR(product.unstitchedPrice)}
+                          </span>
+                        </div>
+                        <div className="border-l border-[#C5A059]/20 pl-2">
+                          <span className="text-[9px] text-[#C5A059] font-bold uppercase tracking-wider flex items-center gap-1">
+                            <Scissors className="w-2.5 h-2.5" /> Stitched
+                          </span>
+                          <span className="text-xs font-bold text-[#C5A059] font-mono block">
+                            {formatPKR(product.stitchedPrice)}
+                          </span>
+                        </div>
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="grid grid-cols-2 gap-2 pt-1">
+                      <div className="grid grid-cols-2 gap-2 pt-0.5">
                         <button
                           onClick={() => setSelectedItemForModal(product)}
                           className="py-2 text-[11px] font-semibold tracking-wider rounded-lg border border-[#C5A059]/50 text-[#C5A059] hover:bg-[#C5A059]/10 transition-colors flex items-center justify-center gap-1"
                           title="View Sizing (Inches), Fabrics & Details"
                         >
-                          <Ruler className="w-3 h-3" /> Size &amp; Details
+                          <Ruler className="w-3 h-3" /> Size &amp; Chart
                         </button>
                         <button
-                          onClick={() => handleQuickAdd(product)}
+                          onClick={() => setSelectedItemForModal(product)}
                           className="py-2 text-[11px] font-bold tracking-wider rounded-lg bg-[#C5A059] text-[#051712] hover:bg-[#d4af37] transition-colors flex items-center justify-center gap-1 shadow"
-                          title="Add Size M to Bag"
+                          title="Choose Stitched or Unstitched & Add to Bag"
                         >
-                          <ShoppingBag className="w-3 h-3" /> Add to Bag
+                          <ShoppingBag className="w-3 h-3" /> Select &amp; Buy
                         </button>
                       </div>
                     </div>
