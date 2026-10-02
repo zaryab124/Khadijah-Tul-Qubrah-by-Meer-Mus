@@ -20,10 +20,12 @@ import {
   Send,
   Eye,
 } from 'lucide-react';
+import { fetchOrdersFromSupabase, fetchCustomRequestsFromSupabase } from '../../lib/supabase';
 
 export default function ProductionFloorPage() {
   const [activeStage, setActiveStage] = useState<string>('all');
   const [dashboardData, setDashboardData] = useState<any>(null);
+  const [jobs, setJobs] = useState<any[]>([]);
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
@@ -46,20 +48,195 @@ export default function ProductionFloorPage() {
   const fetchDashboard = async () => {
     setLoading(true);
     try {
-      const dashboardUrl = getBackendApiUrl('production/dashboard');
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      const res = await fetch(dashboardUrl, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      // 1. Check backend API
+      let data: any = null;
+      try {
+        const dashboardUrl = getBackendApiUrl('production/dashboard');
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const res = await fetch(dashboardUrl, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (res.ok) {
+          data = await res.json();
+        }
+      } catch {
+        // Fallback
+      }
+
+      // 2. Fetch real orders from local storage and Supabase
+      const allOrders: any[] = [];
+      try {
+        const localOrders = localStorage.getItem('khadijah_real_orders');
+        if (localOrders) {
+          const parsed = JSON.parse(localOrders);
+          if (Array.isArray(parsed)) allOrders.push(...parsed);
+        }
+      } catch (e) {
+        console.error('Error reading local orders', e);
+      }
+
+      try {
+        const sbOrders = await fetchOrdersFromSupabase();
+        if (sbOrders && Array.isArray(sbOrders)) {
+          sbOrders.forEach((so) => {
+            if (!allOrders.some((o) => o.order_number === so.order_number || o.id === so.id)) {
+              allOrders.push(so);
+            }
+          });
+        }
+      } catch (e) {
+        console.error('Error fetching Supabase orders', e);
+      }
+
+      // Load stored production progression
+      let storedProgressMap: Record<string, any> = {};
+      try {
+        const sp = localStorage.getItem('khadijah_production_jobs');
+        if (sp) storedProgressMap = JSON.parse(sp);
+      } catch (e) {
+        console.error('Error reading production jobs cache', e);
+      }
+
+      // Construct live production jobs from real orders
+      const constructedJobs = allOrders.map((ord, idx) => {
+        const orderNum = ord.order_number || ord.orderNumber || `ORD-${idx + 1}`;
+        const jobKey = `job-${ord.id || orderNum}`;
+        const saved = storedProgressMap[jobKey] || {};
+
+        const itemsTitle =
+          ord.items?.map((it: any) => it.product_name || it.name || it.itemTitle).join(', ') ||
+          ord.product_name ||
+          'Handcrafted Bespoke Garment';
+
+        return {
+          id: jobKey,
+          jobNumber: `JOB-${orderNum.replace(/^ORD-?/, '')}`,
+          status: saved.status || ord.production_status || 'CUTTING',
+          progressPercentage: saved.progressPercentage ?? 20,
+          targetCompletionDate: saved.targetCompletionDate || 'Within Turnaround Days',
+          order: { orderNumber: orderNum },
+          orderItem: { itemTitle: itemsTitle },
+          customer: { name: ord.customer_name || 'Bespoke Patron' },
+          stageNotes: saved.stageNotes || 'Job initiated on atelier cutting floor.',
+        };
       });
-      if (res.ok) {
-        const data = await res.json();
-        setDashboardData(data);
+
+      setJobs(constructedJobs);
+
+      // Compute stage counts dynamically
+      const metrics = {
+        newCount: constructedJobs.filter((j) => j.status === 'NEW').length,
+        cuttingCount: constructedJobs.filter((j) => j.status === 'CUTTING').length,
+        stitchingCount: constructedJobs.filter((j) => j.status === 'STITCHING').length,
+        craftingCount: constructedJobs.filter((j) => j.status === 'CRAFTING').length,
+        finishingCount: constructedJobs.filter((j) => j.status === 'FINISHING').length,
+        qcCount: constructedJobs.filter((j) => j.status === 'QUALITY_CHECK').length,
+        readyCount: constructedJobs.filter((j) => j.status === 'READY').length,
+        onHoldCount: constructedJobs.filter((j) => j.status === 'ON_HOLD').length,
+      };
+
+      setDashboardData({ metrics });
+
+      if (constructedJobs.length > 0 && !selectedJob) {
+        setSelectedJob(constructedJobs[0]);
       }
     } catch {
       // Fallback
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleUpdateStage = () => {
+    if (!selectedJob) {
+      alert('Select an active job to update.');
+      return;
+    }
+    const updatedJobs = jobs.map((j) => {
+      if (j.id === selectedJob.id) {
+        return {
+          ...j,
+          status: targetStage,
+          progressPercentage: progressVal,
+          stageNotes,
+        };
+      }
+      return j;
+    });
+
+    setJobs(updatedJobs);
+    setSelectedJob({
+      ...selectedJob,
+      status: targetStage,
+      progressPercentage: progressVal,
+      stageNotes,
+    });
+
+    try {
+      const stored: Record<string, any> = JSON.parse(localStorage.getItem('khadijah_production_jobs') || '{}');
+      stored[selectedJob.id] = {
+        status: targetStage,
+        progressPercentage: progressVal,
+        stageNotes,
+      };
+      localStorage.setItem('khadijah_production_jobs', JSON.stringify(stored));
+    } catch (e) {
+      console.error(e);
+    }
+
+    alert(`Job ${selectedJob.jobNumber} advanced to ${targetStage} (${progressVal}%).`);
+  };
+
+  const handleQcSubmit = () => {
+    if (!selectedJob) {
+      alert('Select an active job for inspection.');
+      return;
+    }
+    setQcSubmitting(true);
+    const newStatus = qcStatus === 'PASSED' ? 'READY' : reworkStage;
+    const newProgress = qcStatus === 'PASSED' ? 100 : stagesList.find((s) => s.name === reworkStage)?.progress || 40;
+
+    const updatedJobs = jobs.map((j) => {
+      if (j.id === selectedJob.id) {
+        return {
+          ...j,
+          status: newStatus,
+          progressPercentage: newProgress,
+          qcStatus,
+          qcNotes,
+          qcIssues: qcStatus === 'FAILED' ? qcIssues : '',
+        };
+      }
+      return j;
+    });
+
+    setJobs(updatedJobs);
+    setSelectedJob({
+      ...selectedJob,
+      status: newStatus,
+      progressPercentage: newProgress,
+    });
+
+    try {
+      const stored: Record<string, any> = JSON.parse(localStorage.getItem('khadijah_production_jobs') || '{}');
+      stored[selectedJob.id] = {
+        status: newStatus,
+        progressPercentage: newProgress,
+        qcStatus,
+        qcNotes,
+        qcIssues,
+      };
+      localStorage.setItem('khadijah_production_jobs', JSON.stringify(stored));
+    } catch (e) {
+      console.error(e);
+    }
+
+    alert(
+      qcStatus === 'PASSED'
+        ? `Quality Approved! Job ${selectedJob.jobNumber} is marked READY_TO_SHIP.`
+        : `Quality Inspection failed. Job ${selectedJob.jobNumber} dispatched back to ${reworkStage}.`
+    );
+    setQcSubmitting(false);
   };
 
   const stagesList = [
@@ -72,6 +249,11 @@ export default function ProductionFloorPage() {
     { key: 'readyCount', name: 'READY', progress: 100, count: dashboardData?.metrics?.readyCount || 0 },
     { key: 'onHoldCount', name: 'ON_HOLD', progress: 0, count: dashboardData?.metrics?.onHoldCount || 0 },
   ];
+
+  const filteredJobs = jobs.filter((j) => {
+    if (activeStage === 'all') return true;
+    return j.status === activeStage;
+  });
 
   return (
     <PortalGuard
@@ -140,47 +322,65 @@ export default function ProductionFloorPage() {
           <div className="bg-[#051c15] p-5 rounded-xl border border-[#C5A059]/30">
             <h2 className="text-base font-serif text-[#FCFBF7] mb-3 flex items-center justify-between">
               <span>Jobs Queue ({activeStage.toUpperCase()})</span>
-              <span className="text-xs font-mono text-[#C5A059]">Floor Status</span>
+              <span className="text-xs font-mono text-[#C5A059]">
+                {filteredJobs.length} ACTIVE
+              </span>
             </h2>
 
             <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
-              {/* Sample / Live Job Card */}
-              <div
-                onClick={() =>
-                  setSelectedJob({
-                    id: 'job-1',
-                    jobNumber: 'JOB-202609-0001',
-                    status: 'CRAFTING',
-                    progressPercentage: 60,
-                    targetCompletionDate: '2026-11-20',
-                    order: { orderNumber: 'ORD-202609-0001' },
-                    orderItem: { itemTitle: 'Heirloom Velvet Bridal Lehenga with Zardozi' },
-                  })
-                }
-                className="p-4 rounded-xl border border-[#C5A059] bg-[#072A20] cursor-pointer shadow-md"
-              >
-                <div className="flex justify-between items-start">
-                  <span className="text-xs font-mono text-[#C5A059]">JOB-202609-0001</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded font-mono uppercase font-semibold bg-amber-900/60 text-amber-300 border border-amber-600/40">
-                    CRAFTING
-                  </span>
-                </div>
-                <h3 className="text-sm font-semibold text-[#FCFBF7] mt-1.5">
-                  Heirloom Velvet Bridal Lehenga with Zardozi
-                </h3>
-                <p className="text-xs text-gray-400 mt-1 font-mono">Order: ORD-202609-0001</p>
+              {filteredJobs.length > 0 ? (
+                filteredJobs.map((job) => (
+                  <div
+                    key={job.id}
+                    onClick={() => {
+                      setSelectedJob(job);
+                      setTargetStage(job.status);
+                      setProgressVal(job.progressPercentage);
+                      if (job.stageNotes) setStageNotes(job.stageNotes);
+                    }}
+                    className={`p-4 rounded-xl border cursor-pointer shadow-md transition-all ${
+                      selectedJob?.id === job.id
+                        ? 'border-[#C5A059] bg-[#072A20]'
+                        : 'border-gray-800 bg-[#072A20]/40 hover:border-gray-700'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <span className="text-xs font-mono text-[#C5A059]">{job.jobNumber}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded font-mono uppercase font-semibold bg-amber-900/60 text-amber-300 border border-amber-600/40">
+                        {job.status}
+                      </span>
+                    </div>
+                    <h3 className="text-sm font-semibold text-[#FCFBF7] mt-1.5">
+                      {job.orderItem?.itemTitle || 'Handcrafted Garment'}
+                    </h3>
+                    <p className="text-xs text-gray-400 mt-1 font-mono">
+                      Order: {job.order?.orderNumber} &bull; {job.customer?.name}
+                    </p>
 
-                {/* Progress Bar */}
-                <div className="mt-3">
-                  <div className="flex justify-between text-[10px] text-gray-400 font-mono mb-1">
-                    <span>Progress</span>
-                    <span className="text-[#C5A059]">60%</span>
+                    {/* Progress Bar */}
+                    <div className="mt-3">
+                      <div className="flex justify-between text-[10px] text-gray-400 font-mono mb-1">
+                        <span>Progress</span>
+                        <span className="text-[#C5A059]">{job.progressPercentage}%</span>
+                      </div>
+                      <div className="w-full bg-gray-800 rounded-full h-1.5">
+                        <div
+                          className="bg-[#C5A059] h-1.5 rounded-full transition-all duration-300"
+                          style={{ width: `${job.progressPercentage}%` }}
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div className="w-full bg-gray-800 rounded-full h-1.5">
-                    <div className="bg-[#C5A059] h-1.5 rounded-full" style={{ width: '60%' }} />
-                  </div>
+                ))
+              ) : (
+                <div className="text-center py-12 px-4 rounded-xl border border-dashed border-gray-800 bg-[#041510]/50 text-gray-500 text-xs space-y-2">
+                  <Scissors className="w-8 h-8 mx-auto text-[#C5A059]/40" />
+                  <p className="font-serif text-sm text-[#FCFBF7]">Floor Queue Idle</p>
+                  <p className="text-gray-400 max-w-xs mx-auto">
+                    No active jobs in the {activeStage} queue. Client orders placed on the storefront or via bespoke commissions will show up here automatically.
+                  </p>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -247,7 +447,11 @@ export default function ProductionFloorPage() {
               <button className="flex items-center gap-2 px-3 py-2 bg-[#072A20] text-[#C5A059] border border-[#C5A059]/30 rounded-lg text-xs hover:bg-[#0b3d2e]">
                 <Camera className="w-3.5 h-3.5" /> Attach Craft Photo
               </button>
-              <button className="flex items-center gap-1.5 px-4 py-2 bg-[#C5A059] text-[#072A20] font-bold rounded-lg text-xs hover:bg-[#d4af37]">
+              <button
+                onClick={handleUpdateStage}
+                disabled={!selectedJob}
+                className="flex items-center gap-1.5 px-4 py-2 bg-[#C5A059] text-[#072A20] font-bold rounded-lg text-xs hover:bg-[#d4af37] disabled:opacity-50 disabled:cursor-not-allowed"
+              >
                 <Send className="w-3.5 h-3.5" /> Log Stage Update
               </button>
             </div>
@@ -327,8 +531,9 @@ export default function ProductionFloorPage() {
             </div>
 
             <button
-              disabled={qcSubmitting}
-              className={`w-full py-2.5 rounded-lg text-xs font-bold transition-colors ${
+              disabled={qcSubmitting || !selectedJob}
+              onClick={handleQcSubmit}
+              className={`w-full py-2.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                 qcStatus === 'PASSED'
                   ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
                   : 'bg-red-600 hover:bg-red-500 text-white'

@@ -49,76 +49,140 @@ export default function AgentCrmPage() {
   const [activitySummary, setActivitySummary] = useState('');
   const [activityNotes, setActivityNotes] = useState('');
 
-  // Sample production-aligned state for active Concierge Agent
-  const [leads, setLeads] = useState<LeadItem[]>([
-    {
-      id: 'lead-01',
-      leadNumber: 'LED-202609-0012',
-      firstName: 'Amina',
-      lastName: 'Tariq',
-      contactPhone: '+923001234567',
-      contactEmail: 'amina.t@example.com',
-      leadSource: 'WhatsApp',
-      status: 'NEW',
-      priority: 'VIP',
-      inquiryMessage: 'Interested in bespoke bridal lehenga with zardozi embroidery for December wedding.',
-      estimatedValue: 450000,
-      activitiesCount: 2,
-    },
-    {
-      id: 'lead-02',
-      leadNumber: 'LED-202609-0008',
-      firstName: 'Zoya',
-      lastName: 'Rehman',
-      contactPhone: '+923219876543',
-      contactEmail: 'zoya.r@example.com',
-      leadSource: 'Instagram',
-      status: 'CONTACTED',
-      priority: 'HIGH',
-      inquiryMessage: 'Requested velvet formal peshwas customization details and fabric swatches.',
-      estimatedValue: 185000,
-      scheduledAt: 'Today, 4:00 PM',
-      activitiesCount: 4,
-    },
-    {
-      id: 'lead-03',
-      leadNumber: 'LED-202609-0004',
-      firstName: 'Sarah',
-      lastName: 'Khan',
-      contactPhone: '+923335551234',
-      contactEmail: 'sarah.k@example.com',
-      leadSource: 'Website',
-      status: 'CUSTOM_REQUEST',
-      priority: 'VIP',
-      inquiryMessage: 'Submitted custom design request CYO-202609-0001 with 3 moodboard inspiration images.',
-      estimatedValue: 320000,
-      activitiesCount: 6,
-    },
-    {
-      id: 'lead-04',
-      leadNumber: 'LED-202609-0002',
-      firstName: 'Hira',
-      lastName: 'Mansoor',
-      contactPhone: '+923451122334',
-      contactEmail: 'hira.m@example.com',
-      leadSource: 'Referral',
-      status: 'CONVERTED',
-      priority: 'VIP',
-      inquiryMessage: 'Quotation V2 accepted. Converted to Order ORD-202609-0001.',
-      estimatedValue: 280000,
-      activitiesCount: 9,
-    },
-  ]);
+  // Production-aligned real leads state (No dummy data)
+  const [leads, setLeads] = useState<LeadItem[]>([]);
+  const [ingestModalOpen, setIngestModalOpen] = useState(false);
+  const [newLeadForm, setNewLeadForm] = useState({
+    firstName: '',
+    lastName: '',
+    contactPhone: '',
+    contactEmail: '',
+    leadSource: 'WhatsApp',
+    priority: 'MEDIUM' as 'LOW' | 'MEDIUM' | 'HIGH' | 'VIP',
+    inquiryMessage: '',
+    estimatedValue: '',
+  });
 
-  const metrics = {
-    todaysLeadsCount: 5,
-    newLeadsCount: 3,
-    followUpsCount: 4,
-    interestedCount: 6,
-    customRequestsCount: 2,
-    quotesCount: 3,
-    conversionsCount: 8,
+  // Load real leads from Supabase and localStorage
+  React.useEffect(() => {
+    loadRealLeads();
+  }, []);
+
+  const loadRealLeads = async () => {
+    const combined: LeadItem[] = [];
+
+    // 1. Load locally ingested leads
+    try {
+      const storedLeads = localStorage.getItem('khadijah_leads');
+      if (storedLeads) {
+        const parsed = JSON.parse(storedLeads);
+        if (Array.isArray(parsed)) {
+          combined.push(...parsed);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to parse local leads', e);
+    }
+
+    // 2. Load custom requests from localStorage as leads
+    try {
+      const storedReqs = localStorage.getItem('khadijah_custom_requests');
+      if (storedReqs) {
+        const parsed = JSON.parse(storedReqs);
+        if (Array.isArray(parsed)) {
+          parsed.forEach((req: any, idx: number) => {
+            if (!combined.some((l) => l.leadNumber === (req.request_number || req.id))) {
+              const [fName, ...lParts] = (req.customer_name || 'Client Inquirer').split(' ');
+              combined.push({
+                id: req.id || `req-lead-${idx}`,
+                leadNumber: req.request_number || `REQ-${idx + 1}`,
+                firstName: fName || 'Bespoke',
+                lastName: lParts.join(' ') || 'Client',
+                contactPhone: req.customer_phone || '+923000000000',
+                contactEmail: req.customer_email || '',
+                leadSource: 'Storefront Bespoke',
+                status: req.status || 'CUSTOM_REQUEST',
+                priority: 'VIP',
+                inquiryMessage: `${req.silhouette || 'Bespoke'} garment in ${req.fabric || 'Fabric'}, Craft: ${req.craft || 'Handwork'}. ${req.special_notes || ''}`,
+                estimatedValue: req.total_amount || 150000,
+                activitiesCount: 1,
+              });
+            }
+          });
+        }
+      }
+    } catch (e) {
+      console.error('Failed to parse local custom requests', e);
+    }
+
+    setLeads(combined);
   };
+
+  const handleIngestLead = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newLeadForm.firstName || !newLeadForm.contactPhone) {
+      alert('Please provide client name and contact phone number.');
+      return;
+    }
+
+    const newLead: LeadItem = {
+      id: 'lead-' + Date.now(),
+      leadNumber: 'LED-' + new Date().getFullYear() + String(new Date().getMonth() + 1).padStart(2, '0') + '-' + String(Math.floor(1000 + Math.random() * 9000)),
+      firstName: newLeadForm.firstName,
+      lastName: newLeadForm.lastName || '',
+      contactPhone: newLeadForm.contactPhone,
+      contactEmail: newLeadForm.contactEmail,
+      leadSource: newLeadForm.leadSource,
+      status: 'NEW',
+      priority: newLeadForm.priority,
+      inquiryMessage: newLeadForm.inquiryMessage,
+      estimatedValue: Number(newLeadForm.estimatedValue) || undefined,
+      activitiesCount: 0,
+    };
+
+    const updated = [newLead, ...leads];
+    setLeads(updated);
+    try {
+      localStorage.setItem('khadijah_leads', JSON.stringify(updated));
+    } catch (err) {
+      console.error('Failed to save to localStorage', err);
+    }
+
+    setIngestModalOpen(false);
+    setNewLeadForm({
+      firstName: '',
+      lastName: '',
+      contactPhone: '',
+      contactEmail: '',
+      leadSource: 'WhatsApp',
+      priority: 'MEDIUM',
+      inquiryMessage: '',
+      estimatedValue: '',
+    });
+    setSelectedLead(newLead);
+  };
+
+  // Dynamic calculated metrics from live data
+  const metrics = {
+    todaysLeadsCount: leads.filter((l) => l.status === 'NEW' || l.status === 'TODAY').length,
+    newLeadsCount: leads.filter((l) => l.status === 'NEW').length,
+    followUpsCount: leads.filter((l) => l.status === 'CONTACTED' || l.status === 'FOLLOW_UP').length,
+    interestedCount: leads.filter((l) => l.status === 'INTERESTED' || l.priority === 'HIGH' || l.priority === 'VIP').length,
+    customRequestsCount: leads.filter((l) => l.status === 'CUSTOM_REQUEST').length,
+    quotesCount: leads.filter((l) => l.status === 'QUOTED' || l.status === 'QUOTATION').length,
+    conversionsCount: leads.filter((l) => l.status === 'CONVERTED').length,
+  };
+
+  const filteredLeads = leads.filter((lead) => {
+    if (activeTab === 'TODAY') return true;
+    if (activeTab === 'NEW') return lead.status === 'NEW';
+    if (activeTab === 'FOLLOW_UPS') return lead.status === 'CONTACTED' || lead.status === 'FOLLOW_UP';
+    if (activeTab === 'INTERESTED') return lead.status === 'INTERESTED' || lead.priority === 'HIGH' || lead.priority === 'VIP';
+    if (activeTab === 'CUSTOM') return lead.status === 'CUSTOM_REQUEST';
+    if (activeTab === 'QUOTES') return lead.status === 'QUOTED' || lead.status === 'QUOTATION';
+    if (activeTab === 'CONVERTED') return lead.status === 'CONVERTED';
+    return true;
+  });
 
   const handleLogActivity = (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,18 +217,20 @@ export default function AgentCrmPage() {
           <h1 className="text-3xl font-serif text-[#FCFBF7] mt-1">High-Touch Client Pipeline</h1>
           <div className="flex items-center gap-4 text-xs text-gray-400 mt-2">
             <span className="flex items-center gap-1.5 text-emerald-400">
-              <ShieldCheck className="w-3.5 h-3.5" /> Agent: Fatima Bibi (Concierge)
+              <ShieldCheck className="w-3.5 h-3.5" /> Active Atelier Concierge Desk
             </span>
             <span>•</span>
-            <span className="text-[#C5A059]">Active Workload: 8 / 30 Capacity</span>
+            <span className="text-[#C5A059]">Active Workload: {leads.filter((l) => l.status !== 'CONVERTED').length} / 30 Capacity</span>
             <span>•</span>
-            <span className="text-blue-400">Conversion Rate: 34.8%</span>
+            <span className="text-blue-400">
+              Conversion Rate: {leads.length > 0 ? ((leads.filter((l) => l.status === 'CONVERTED').length / leads.length) * 100).toFixed(1) : '0.0'}%
+            </span>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
           <button
-            onClick={() => alert('New Lead submission drawer opening...')}
+            onClick={() => setIngestModalOpen(true)}
             className="flex items-center gap-2 px-4 py-2.5 bg-[#C5A059] text-[#072A20] rounded-lg text-sm font-semibold hover:bg-[#d4af37] transition shadow-lg shadow-[#C5A059]/20"
           >
             <Plus className="w-4 h-4" /> Quick Ingest Lead
@@ -213,63 +279,79 @@ export default function AgentCrmPage() {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-serif text-[#FCFBF7]">Active Client Inquiries</h2>
               <span className="text-xs text-[#C5A059] bg-[#C5A059]/10 px-3 py-1 rounded-full border border-[#C5A059]/30">
-                Agent Isolation Active: Showing Only Assigned Clients
+                Live Feed: {filteredLeads.length} Lead{filteredLeads.length !== 1 ? 's' : ''}
               </span>
             </div>
 
             <div className="space-y-3">
-              {leads.map((lead) => (
-                <div
-                  key={lead.id}
-                  onClick={() => setSelectedLead(lead)}
-                  className={`p-4 rounded-xl border transition cursor-pointer ${
-                    selectedLead?.id === lead.id
-                      ? 'bg-[#072A20] border-[#C5A059]'
-                      : 'bg-[#041510] border-gray-800/80 hover:border-gray-700'
-                  }`}
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-mono text-[#C5A059]">{lead.leadNumber}</span>
-                        <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800/50">
-                          {lead.leadSource}
+              {filteredLeads.length > 0 ? (
+                filteredLeads.map((lead) => (
+                  <div
+                    key={lead.id}
+                    onClick={() => setSelectedLead(lead)}
+                    className={`p-4 rounded-xl border transition cursor-pointer ${
+                      selectedLead?.id === lead.id
+                        ? 'bg-[#072A20] border-[#C5A059]'
+                        : 'bg-[#041510] border-gray-800/80 hover:border-gray-700'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-mono text-[#C5A059]">{lead.leadNumber}</span>
+                          <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800/50">
+                            {lead.leadSource}
+                          </span>
+                          {lead.priority === 'VIP' && (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-950/80 text-amber-300 border border-amber-800/50">
+                              VIP
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="text-base font-medium text-[#FCFBF7] mt-1">
+                          {lead.firstName} {lead.lastName}
+                        </h3>
+                        <p className="text-xs text-gray-400 mt-1 line-clamp-1">{lead.inquiryMessage}</p>
+                      </div>
+
+                      <div className="text-right">
+                        <div className="text-xs font-bold text-[#C5A059]">
+                          PKR {lead.estimatedValue ? (lead.estimatedValue / 1000).toFixed(0) + 'k' : 'Custom'}
+                        </div>
+                        <span className="inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-300 uppercase tracking-wider">
+                          {lead.status}
                         </span>
-                        {lead.priority === 'VIP' && (
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-950/80 text-amber-300 border border-amber-800/50">
-                            VIP
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-800/60 text-xs text-gray-400">
+                      <div className="flex items-center gap-3">
+                        <span>{lead.contactPhone}</span>
+                        {lead.scheduledAt && (
+                          <span className="text-purple-400 flex items-center gap-1">
+                            <Calendar className="w-3 h-3" /> {lead.scheduledAt}
                           </span>
                         )}
                       </div>
-                      <h3 className="text-base font-medium text-[#FCFBF7] mt-1">
-                        {lead.firstName} {lead.lastName}
-                      </h3>
-                      <p className="text-xs text-gray-400 mt-1 line-clamp-1">{lead.inquiryMessage}</p>
-                    </div>
-
-                    <div className="text-right">
-                      <div className="text-xs font-bold text-[#C5A059]">
-                        PKR {lead.estimatedValue ? (lead.estimatedValue / 1000).toFixed(0) + 'k' : 'Custom'}
-                      </div>
-                      <span className="inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full bg-gray-800 text-gray-300 uppercase tracking-wider">
-                        {lead.status}
-                      </span>
+                      <span>{lead.activitiesCount} interactions</span>
                     </div>
                   </div>
-
-                  <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-800/60 text-xs text-gray-400">
-                    <div className="flex items-center gap-3">
-                      <span>{lead.contactPhone}</span>
-                      {lead.scheduledAt && (
-                        <span className="text-purple-400 flex items-center gap-1">
-                          <Calendar className="w-3 h-3" /> {lead.scheduledAt}
-                        </span>
-                      )}
-                    </div>
-                    <span>{lead.activitiesCount} interactions</span>
-                  </div>
+                ))
+              ) : (
+                <div className="text-center py-12 px-4 rounded-xl border border-dashed border-gray-800 bg-[#041510]/50">
+                  <User className="w-10 h-10 mx-auto text-[#C5A059]/40 mb-3" />
+                  <h3 className="text-sm font-serif font-semibold text-[#FCFBF7]">No Inquiries in this Queue</h3>
+                  <p className="text-xs text-gray-400 mt-1 max-w-sm mx-auto">
+                    When clients place bespoke requests on the storefront or via WhatsApp, they will appear here in real time.
+                  </p>
+                  <button
+                    onClick={() => setIngestModalOpen(true)}
+                    className="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#C5A059]/10 text-[#C5A059] border border-[#C5A059]/30 text-xs hover:bg-[#C5A059]/20"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Ingest Real Lead
+                  </button>
                 </div>
-              ))}
+              )}
             </div>
           </div>
         </div>
@@ -422,6 +504,137 @@ export default function AgentCrmPage() {
                   className="px-4 py-2 rounded-lg text-xs font-semibold bg-[#C5A059] text-[#072A20] hover:bg-[#d4af37]"
                 >
                   Save Activity Log
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Ingest Lead Modal */}
+      {ingestModalOpen && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-[#051c15] border border-[#C5A059]/40 p-6 rounded-2xl max-w-lg w-full shadow-2xl">
+            <div className="flex justify-between items-center mb-4 pb-2 border-b border-gray-800">
+              <div>
+                <h3 className="text-xl font-serif text-[#FCFBF7]">Ingest Real Client Lead</h3>
+                <p className="text-xs text-gray-400">Capture direct walk-in, phone, or WhatsApp inquiries into the live atelier pipeline.</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleIngestLead} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-300 mb-1">First Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Ayesha"
+                    value={newLeadForm.firstName}
+                    onChange={(e) => setNewLeadForm({ ...newLeadForm, firstName: e.target.value })}
+                    className="w-full bg-[#041510] border border-gray-700 rounded-lg p-2.5 text-xs text-[#FCFBF7] focus:outline-none focus:border-[#C5A059]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-300 mb-1">Last Name</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Malik"
+                    value={newLeadForm.lastName}
+                    onChange={(e) => setNewLeadForm({ ...newLeadForm, lastName: e.target.value })}
+                    className="w-full bg-[#041510] border border-gray-700 rounded-lg p-2.5 text-xs text-[#FCFBF7] focus:outline-none focus:border-[#C5A059]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-300 mb-1">Phone / WhatsApp *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="+923001234567"
+                    value={newLeadForm.contactPhone}
+                    onChange={(e) => setNewLeadForm({ ...newLeadForm, contactPhone: e.target.value })}
+                    className="w-full bg-[#041510] border border-gray-700 rounded-lg p-2.5 text-xs text-[#FCFBF7] focus:outline-none focus:border-[#C5A059]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-300 mb-1">Email Address</label>
+                  <input
+                    type="email"
+                    placeholder="client@example.com"
+                    value={newLeadForm.contactEmail}
+                    onChange={(e) => setNewLeadForm({ ...newLeadForm, contactEmail: e.target.value })}
+                    className="w-full bg-[#041510] border border-gray-700 rounded-lg p-2.5 text-xs text-[#FCFBF7] focus:outline-none focus:border-[#C5A059]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-300 mb-1">Lead Source</label>
+                  <select
+                    value={newLeadForm.leadSource}
+                    onChange={(e) => setNewLeadForm({ ...newLeadForm, leadSource: e.target.value })}
+                    className="w-full bg-[#041510] border border-gray-700 rounded-lg p-2.5 text-xs text-[#FCFBF7] focus:outline-none focus:border-[#C5A059]"
+                  >
+                    <option value="WhatsApp">WhatsApp</option>
+                    <option value="Phone Call">Phone Call</option>
+                    <option value="Instagram DM">Instagram DM</option>
+                    <option value="Atelier Walk-in">Atelier Walk-in</option>
+                    <option value="Referral">Client Referral</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-300 mb-1">Priority</label>
+                  <select
+                    value={newLeadForm.priority}
+                    onChange={(e) => setNewLeadForm({ ...newLeadForm, priority: e.target.value as any })}
+                    className="w-full bg-[#041510] border border-gray-700 rounded-lg p-2.5 text-xs text-[#FCFBF7] focus:outline-none focus:border-[#C5A059]"
+                  >
+                    <option value="LOW">Standard</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="HIGH">High</option>
+                    <option value="VIP">VIP Haute Couture</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-300 mb-1">Est. Value (PKR)</label>
+                  <input
+                    type="number"
+                    placeholder="150000"
+                    value={newLeadForm.estimatedValue}
+                    onChange={(e) => setNewLeadForm({ ...newLeadForm, estimatedValue: e.target.value })}
+                    className="w-full bg-[#041510] border border-gray-700 rounded-lg p-2.5 text-xs text-[#FCFBF7] focus:outline-none focus:border-[#C5A059]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-300 mb-1">Inquiry / Bespoke Requirements</label>
+                <textarea
+                  rows={3}
+                  placeholder="Client requested custom velvet bridal peshwas with gold zardozi and pearl hand-embroidery..."
+                  value={newLeadForm.inquiryMessage}
+                  onChange={(e) => setNewLeadForm({ ...newLeadForm, inquiryMessage: e.target.value })}
+                  className="w-full bg-[#041510] border border-gray-700 rounded-lg p-2.5 text-xs text-[#FCFBF7] focus:outline-none focus:border-[#C5A059]"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-gray-800">
+                <button
+                  type="button"
+                  onClick={() => setIngestModalOpen(false)}
+                  className="px-4 py-2 rounded-lg text-xs font-medium text-gray-400 hover:text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-lg text-xs font-semibold bg-[#C5A059] text-[#072A20] hover:bg-[#d4af37]"
+                >
+                  Create Live Lead
                 </button>
               </div>
             </form>

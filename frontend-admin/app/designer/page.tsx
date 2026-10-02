@@ -20,6 +20,8 @@ import {
   RefreshCw,
 } from 'lucide-react';
 
+import { fetchCustomRequestsFromSupabase } from '../../lib/supabase';
+
 interface QuotationItemInput {
   itemTitle: string;
   itemType: string;
@@ -69,20 +71,101 @@ export default function DesignerStudioPage() {
   const fetchDashboard = async () => {
     setLoading(true);
     try {
-      const dashboardUrl = getBackendApiUrl('designer/dashboard');
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      const res = await fetch(dashboardUrl, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setDashboardData(data);
-        if (data.queues?.newRequests?.length > 0 && !selectedRequest) {
-          setSelectedRequest(data.queues.newRequests[0]);
+      // 1. Try backend API first
+      let data: any = null;
+      try {
+        const dashboardUrl = getBackendApiUrl('designer/dashboard');
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const res = await fetch(dashboardUrl, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (res.ok) {
+          data = await res.json();
         }
+      } catch {
+        // Fallback to client data
       }
-    } catch {
-      // Fallback preview data if API is loading
+
+      // If backend has no requests, load real requests from localStorage and Supabase
+      const allRealRequests: any[] = [];
+      try {
+        const localReqs = localStorage.getItem('khadijah_custom_requests');
+        if (localReqs) {
+          const parsed = JSON.parse(localReqs);
+          if (Array.isArray(parsed)) allRealRequests.push(...parsed);
+        }
+      } catch (e) {
+        console.error('Error loading local custom requests', e);
+      }
+
+      try {
+        const sbReqs = await fetchCustomRequestsFromSupabase();
+        if (sbReqs && Array.isArray(sbReqs)) {
+          sbReqs.forEach((r) => {
+            if (!allRealRequests.some((x) => x.request_number === r.request_number || x.id === r.id)) {
+              allRealRequests.push(r);
+            }
+          });
+        }
+      } catch (e) {
+        console.error('Error loading Supabase custom requests', e);
+      }
+
+      // Map raw custom requests into designer studio format
+      const formatted = allRealRequests.map((r, i) => {
+        const [fName, ...lParts] = (r.customer_name || 'Bespoke Patron').split(' ');
+        return {
+          id: r.id || `req-${i}`,
+          requestNumber: r.request_number || `REQ-${i + 1}`,
+          status: r.status || 'NEW',
+          customer: {
+            firstName: fName || 'Bespoke',
+            lastName: lParts.join(' ') || 'Client',
+            email: r.customer_email || '',
+            phone: r.customer_phone || '',
+          },
+          sizingMode: r.stitching_type || 'CUSTOM',
+          customerBudget: r.total_amount || 0,
+          designNotes: `${r.silhouette || 'Bespoke'} garment in ${r.fabric || 'Fabric'}, Craft: ${r.craft || 'Handwork'}. ${r.special_notes || ''}`,
+          silhouette: r.silhouette,
+          fabric: r.fabric,
+          craft: r.craft,
+          colour: r.colour,
+        };
+      });
+
+      const newReqs = formatted.filter((r) => r.status === 'NEW' || r.status === 'SUBMITTED' || !r.status);
+      const assignedReqs = formatted.filter((r) => r.status === 'ASSIGNED');
+      const clarificationReqs = formatted.filter((r) => r.status === 'CLARIFICATION');
+      const prepReqs = formatted.filter((r) => r.status === 'PREPARING_QUOTE');
+      const revisionReqs = formatted.filter((r) => r.status === 'REVISION');
+      const completedReqs = formatted.filter((r) => r.status === 'QUOTED' || r.status === 'ACCEPTED');
+
+      const builtData = {
+        metrics: {
+          newRequestsCount: data?.metrics?.newRequestsCount ?? newReqs.length,
+          assignedRequestsCount: data?.metrics?.assignedRequestsCount ?? assignedReqs.length,
+          clarificationRequestsCount: data?.metrics?.clarificationRequestsCount ?? clarificationReqs.length,
+          quotationPreparationCount: data?.metrics?.quotationPreparationCount ?? prepReqs.length,
+          revisionRequestsCount: data?.metrics?.revisionRequestsCount ?? revisionReqs.length,
+          completedQuotesCount: data?.metrics?.completedQuotesCount ?? completedReqs.length,
+        },
+        queues: {
+          newRequests: (data?.queues?.newRequests?.length ? data.queues.newRequests : newReqs),
+          assignedRequests: (data?.queues?.assignedRequests?.length ? data.queues.assignedRequests : assignedReqs),
+          clarificationRequests: (data?.queues?.clarificationRequests?.length ? data.queues.clarificationRequests : clarificationReqs),
+          quotationPreparation: (data?.queues?.quotationPreparation?.length ? data.queues.quotationPreparation : prepReqs),
+          revisionRequests: (data?.queues?.revisionRequests?.length ? data.queues.revisionRequests : revisionReqs),
+          completedQuotes: (data?.queues?.completedQuotes?.length ? data.queues.completedQuotes : completedReqs),
+        },
+      };
+
+      setDashboardData(builtData);
+      if (builtData.queues.newRequests?.length > 0 && !selectedRequest) {
+        setSelectedRequest(builtData.queues.newRequests[0]);
+      }
+    } catch (err) {
+      console.error('Failed to load designer dashboard', err);
     } finally {
       setLoading(false);
     }
@@ -232,14 +315,41 @@ export default function DesignerStudioPage() {
                   Quotation Engine Workbench
                 </h2>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  Target Request: <strong className="text-[#C5A059] font-mono">{selectedRequest?.requestNumber || 'CDR-SAMPLE-0001'}</strong>
+                  Target Request: <strong className="text-[#C5A059] font-mono">{selectedRequest?.requestNumber || 'No Commission Selected'}</strong>
                 </p>
               </div>
 
               <div className="flex items-center gap-2">
                 <button
-                  disabled={submitting}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-[#C5A059] text-[#072A20] rounded-lg text-xs font-bold hover:bg-[#d4af37] transition-colors"
+                  disabled={submitting || !selectedRequest}
+                  onClick={() => {
+                    if (!selectedRequest) {
+                      alert('Please select an active bespoke request from the queue to publish a quotation.');
+                      return;
+                    }
+                    try {
+                      const localReqs = localStorage.getItem('khadijah_custom_requests');
+                      if (localReqs) {
+                        const parsed = JSON.parse(localReqs);
+                        const updated = parsed.map((r: any) => {
+                          if (r.id === selectedRequest.id || r.request_number === selectedRequest.requestNumber) {
+                            return { ...r, status: 'QUOTED', total_amount: total };
+                          }
+                          return r;
+                        });
+                        localStorage.setItem('khadijah_custom_requests', JSON.stringify(updated));
+                      }
+                      alert(`Quotation published for ${selectedRequest.requestNumber}. Total: PKR ${total.toLocaleString()}`);
+                      fetchDashboard();
+                    } catch (e) {
+                      console.error(e);
+                    }
+                  }}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-colors ${
+                    !selectedRequest
+                      ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                      : 'bg-[#C5A059] text-[#072A20] hover:bg-[#d4af37]'
+                  }`}
                 >
                   <Send className="w-3.5 h-3.5" /> Publish Quotation
                 </button>
