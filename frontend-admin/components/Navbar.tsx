@@ -67,57 +67,100 @@ export const Navbar: React.FC<Props> = ({
   return (
     <>
       {/* ========================================================================= */}
-      {/* SYMMETRIC TOP HEADER (3-PART BALANCED ARCHITECTURE) */}
+      {/* 1. TOP PRESTIGE UTILITY BAR (Crystal-Clear, High-Contrast, Professional) */}
       {/* ========================================================================= */}
-      <header className="sticky top-0 z-40 bg-[#030c09]/95 backdrop-blur-md border-b border-[#C5A059]/30 text-[#FCFBF7] shadow-xl">
+      <div className="bg-[#020a07] border-b border-[#C5A059]/25 text-[#FCFBF7] text-xs font-serif py-2 px-4 sm:px-8">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          
+          {/* Left: Our Boutique Selector */}
+          {activeBranch && (
+            <button
+              onClick={() => setIsBranchModalOpen(true)}
+              className="flex items-center gap-1.5 text-xs text-[#dfbc7a] hover:text-[#C5A059] font-medium transition-colors group shrink-0"
+              title="Select Physical Atelier Branch"
+            >
+              <MapPin className="w-3.5 h-3.5 text-[#C5A059] group-hover:scale-110 transition-transform" />
+              <span className="text-[11px] uppercase tracking-wider text-gray-400 font-sans hidden sm:inline">Our Boutique:</span>
+              <span className="font-serif font-bold text-white underline decoration-[#C5A059]/50 underline-offset-2">
+                Jampur, Pakistan
+              </span>
+              <ChevronDown className="w-3 h-3 text-[#C5A059]/70" />
+            </button>
+          )}
+
+          {/* Center: Official Brand Motto */}
+          <div className="hidden md:flex items-center gap-2 text-[10px] font-mono tracking-[0.3em] uppercase text-[#dfbc7a]">
+            <Sparkles className="w-3 h-3 text-[#C5A059] animate-pulse" />
+            <span>STAY HONEST , STAND LONG</span>
+            <Sparkles className="w-3 h-3 text-[#C5A059] animate-pulse" />
+          </div>
+
+          {/* Right: Direct Concierge Hotline & Order Tracking (Razor-Sharp, Never Blurred) */}
+          <div className="flex items-center gap-3 sm:gap-5 text-xs shrink-0">
+            <a
+              href={waLink}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 font-bold transition-colors"
+              title="Direct WhatsApp DM (+923359301919)"
+            >
+              <Phone className="w-3.5 h-3.5 text-emerald-400 fill-emerald-400" />
+              <span className="hidden sm:inline font-sans text-[11px] uppercase tracking-wider">WhatsApp</span>
+              <span className="font-mono text-xs text-emerald-300 font-semibold">+92 335 9301919</span>
+            </a>
+
+            <span className="text-[#C5A059]/40 font-light">|</span>
+
+            <Link
+              href="/order-tracking/ORD-2026-KTQ"
+              className="flex items-center gap-1.5 text-white hover:text-[#C5A059] font-bold transition-colors"
+              title="Track Order Status in Real-Time"
+            >
+              <Truck className="w-3.5 h-3.5 text-[#C5A059]" />
+              <span className="font-serif tracking-wider uppercase text-[11px]">Track Order</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 2. MAIN HAUTE COUTURE ATELIER HEADER (Symmetric, Majestic, Zero Crowding) */}
+      {/* ========================================================================= */}
+      <header className="sticky top-0 z-40 bg-[#030e0b]/98 backdrop-blur-md border-b border-[#C5A059]/40 text-[#FCFBF7] shadow-2xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-[1fr_auto_1fr] items-center h-20 sm:h-24 gap-2 sm:gap-4">
+          <div className="flex items-center justify-between h-20 sm:h-24">
             
             {/* ------------------------------------------------------------------- */}
-            {/* 1. LEFT WING: Boutique Branch Selector & Mobile Menu Only */}
+            {/* LEFT WING: Balanced Navigation (Shop Collection & Drawer Trigger) */}
             {/* ------------------------------------------------------------------- */}
-            <div className="flex items-center gap-1.5 sm:gap-3 justify-start min-w-0">
+            <div className="flex items-center gap-3 flex-1 justify-start">
               {/* Mobile Drawer Hamburger Button */}
               <button
                 onClick={() => setMobileMenuOpen(true)}
                 className="lg:hidden p-2 rounded-xl bg-[#051712] border border-[#C5A059]/40 text-[#C5A059] hover:text-white shrink-0"
                 title="Open Navigation Menu"
               >
-                <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Menu className="w-5 h-5" />
               </button>
 
-              {/* Store Location Pill (Jampur, Pakistan) */}
-              {activeBranch && (
-                <button
-                  onClick={() => setIsBranchModalOpen(true)}
-                  className="flex items-center gap-1.5 sm:gap-2 bg-[#051712] hover:bg-[#072A20] border border-[#C5A059]/30 hover:border-[#C5A059] px-2 py-1.5 sm:px-3.5 sm:py-2 rounded-full transition-all text-left shadow-sm group shrink-0"
-                  title="Our Boutique Location: Jampur, Pakistan"
-                >
-                  <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#C5A059] shrink-0 group-hover:scale-110 transition-transform" />
-                  <div className="hidden sm:block">
-                    <span className="text-[9px] block text-[#C5A059]/70 uppercase tracking-widest font-semibold font-sans">
-                      Our Boutique
-                    </span>
-                    <span className="text-xs font-serif font-bold text-white truncate max-w-[130px] block">
-                      Jampur, Pakistan
-                    </span>
-                  </div>
-                  <div className="sm:hidden">
-                    <span className="text-[10px] font-serif font-bold text-white">Jampur</span>
-                  </div>
-                  <ChevronDown className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#C5A059]/60 ml-0.5" />
-                </button>
-              )}
+              {/* Shop Collection Direct Jump */}
+              <a
+                href="#catalog"
+                className="hidden lg:inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-serif font-bold uppercase tracking-widest text-[#FCFBF7] hover:text-[#051712] hover:bg-[#C5A059] border border-[#C5A059]/40 transition-all shadow-md group"
+              >
+                <ShoppingBag className="w-4 h-4 text-[#C5A059] group-hover:text-[#051712] transition-colors" />
+                <span>Shop Collection</span>
+              </a>
             </div>
 
             {/* ------------------------------------------------------------------- */}
-            {/* 2. CENTERPIECE: Brand Insignia & Slogan with Protected Margins */}
+            {/* SACRED CENTERPIECE: Grand Royal Velvet Medallion & Brand Name */}
             {/* ------------------------------------------------------------------- */}
-            <div className="flex flex-col items-center justify-center shrink-0 text-center px-4 sm:px-8 z-10">
+            <div className="flex flex-col items-center justify-center shrink-0 text-center px-4">
               <Link href="/" className="flex flex-col items-center group">
-                <div className="flex items-center gap-2 sm:gap-3">
+                <div className="flex items-center gap-2.5 sm:gap-3.5">
                   {/* Real Royal Velvet Insignia Medallion */}
-                  <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full p-0.5 bg-gradient-to-tr from-[#C5A059] via-[#F3E5AB] to-[#99752D] ring-2 ring-[#C5A059]/50 shadow-lg shadow-[#C5A059]/20 group-hover:scale-105 transition-transform overflow-hidden shrink-0">
+                  <div className="w-10 h-10 sm:w-13 sm:h-13 rounded-full p-0.5 bg-gradient-to-tr from-[#C5A059] via-[#F3E5AB] to-[#99752D] ring-2 ring-[#C5A059]/60 shadow-xl shadow-[#C5A059]/30 group-hover:scale-105 transition-transform overflow-hidden shrink-0">
                     <img
                       src="/brand-logo.jpg"
                       alt="KHADIJAH-TUL-QUBRAH by Meer&Mus"
@@ -126,40 +169,25 @@ export const Navbar: React.FC<Props> = ({
                   </div>
 
                   <div className="text-left sm:text-center whitespace-nowrap">
-                    <span className="text-xs sm:text-lg font-serif font-black tracking-widest text-[#FCFBF7] leading-none uppercase block">
+                    <span className="text-sm sm:text-xl font-serif font-black tracking-widest text-[#FCFBF7] leading-none uppercase block">
                       KHADIJAH-TUL-<span className="text-[#C5A059]">QUBRAH</span>
                     </span>
-                    <span className="text-[9px] sm:text-xs block text-[#C5A059] font-serif font-bold tracking-[0.2em] uppercase mt-0.5">
+                    <span className="text-[10px] sm:text-xs block text-[#C5A059] font-serif font-bold tracking-[0.25em] uppercase mt-1">
                       by Meer&amp;Mus
                     </span>
                   </div>
                 </div>
-
-                {/* Centered Slogan */}
-                <span className="hidden sm:block text-[8px] sm:text-[9px] font-mono font-bold tracking-[0.35em] uppercase text-[#dfbc7a] mt-1 whitespace-nowrap">
-                  STAY HONEST , STAND LONG
-                </span>
               </Link>
             </div>
 
             {/* ------------------------------------------------------------------- */}
-            {/* 3. RIGHT WING: Track Order, Bespoke Studio, Account & Cart */}
+            {/* RIGHT WING: Bespoke Studio CTA, Account & Cart */}
             {/* ------------------------------------------------------------------- */}
-            <div className="flex items-center gap-1.5 sm:gap-3 justify-end min-w-0">
-              {/* Order Tracking Utility Link */}
-              <Link
-                href="/order-tracking/ORD-2026-KTQ"
-                className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-serif font-bold uppercase tracking-wider text-white/80 hover:text-[#C5A059] hover:bg-[#051712] border border-[#C5A059]/20 hover:border-[#C5A059]/50 transition-all shrink-0"
-                title="Track Order Status in Real-Time"
-              >
-                <Truck className="w-3.5 h-3.5 text-[#C5A059]" />
-                <span>Track Order</span>
-              </Link>
-
+            <div className="flex items-center gap-2 sm:gap-3 flex-1 justify-end">
               {/* "Create Your Own" Custom Order CTA */}
               <button
                 onClick={onOpenBespoke}
-                className="hidden md:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#C5A059]/20 to-[#dfbc7a]/20 border border-[#C5A059]/50 text-[#C5A059] hover:bg-[#C5A059] hover:text-[#051712] font-serif font-bold text-xs uppercase tracking-wider transition-all shadow-md group shrink-0"
+                className="hidden sm:flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#C5A059]/20 via-[#dfbc7a]/20 to-[#C5A059]/20 border border-[#C5A059]/60 text-[#C5A059] hover:bg-[#C5A059] hover:text-[#051712] font-serif font-bold text-xs uppercase tracking-wider transition-all shadow-md group shrink-0"
               >
                 <Sparkles className="w-3.5 h-3.5 text-[#C5A059] group-hover:text-[#051712] transition-colors" />
                 <span>Create Your Own</span>
@@ -170,12 +198,12 @@ export const Navbar: React.FC<Props> = ({
                 <div className="relative shrink-0">
                   <button
                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                    className="flex items-center gap-1.5 bg-[#051712] border border-[#C5A059]/40 hover:border-[#C5A059] px-2 py-1.5 sm:px-2.5 rounded-xl transition-all"
+                    className="flex items-center gap-1.5 bg-[#051712] border border-[#C5A059]/40 hover:border-[#C5A059] px-2.5 py-2 rounded-xl transition-all"
                   >
                     <div className="w-6 h-6 rounded-full bg-[#C5A059]/20 text-[#C5A059] font-bold text-[10px] flex items-center justify-center">
                       {user.name.charAt(0)}
                     </div>
-                    <span className="text-xs font-serif font-bold text-[#FCFBF7] truncate max-w-[80px] hidden sm:block">
+                    <span className="text-xs font-serif font-bold text-[#FCFBF7] truncate max-w-[80px] hidden md:block">
                       {user.name}
                     </span>
                   </button>
@@ -224,10 +252,10 @@ export const Navbar: React.FC<Props> = ({
               ) : (
                 <Link
                   href="/register"
-                  className="hidden sm:flex px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#C5A059] to-amber-600 hover:brightness-110 text-[#051712] font-serif font-black text-xs items-center gap-1.5 shadow-md shadow-[#C5A059]/20 transition-all uppercase tracking-wider"
+                  className="hidden md:flex px-3.5 py-2.5 rounded-xl bg-[#051712] border border-[#C5A059]/50 hover:border-[#C5A059] text-[#C5A059] hover:text-white font-serif font-bold text-xs items-center gap-1.5 shadow-sm transition-all uppercase tracking-wider shrink-0"
                 >
-                  <User className="w-3.5 h-3.5 text-[#051712]" />
-                  <span>Sign In / Register</span>
+                  <User className="w-3.5 h-3.5 text-[#C5A059]" />
+                  <span>Sign In</span>
                 </Link>
               )}
 
@@ -235,7 +263,7 @@ export const Navbar: React.FC<Props> = ({
               {onOpenCart && (
                 <button
                   onClick={onOpenCart}
-                  className="relative bg-gradient-to-r from-[#C5A059] via-[#dfbc7a] to-amber-600 hover:brightness-110 text-[#051712] font-bold px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl flex items-center gap-2 shadow-lg shadow-[#C5A059]/20 active:scale-95 transition-all text-xs sm:text-sm"
+                  className="relative bg-gradient-to-r from-[#C5A059] via-[#dfbc7a] to-amber-600 hover:brightness-110 text-[#051712] font-bold px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl flex items-center gap-2 shadow-lg shadow-[#C5A059]/20 active:scale-95 transition-all text-xs sm:text-sm shrink-0"
                   title="Open Atelier Cart"
                 >
                   <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-[#051712]" />
