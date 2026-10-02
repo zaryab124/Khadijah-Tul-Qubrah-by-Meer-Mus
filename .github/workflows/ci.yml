@@ -101,7 +101,7 @@ jobs:
 
       - name: Install Dependencies
         working-directory: ./frontend-admin
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Build Next.js Application
         working-directory: ./frontend-admin
