@@ -167,7 +167,7 @@ export default function OrderTrackingPage({
     <div className="min-h-screen bg-[#051712] text-[#FCFBF7] flex flex-col font-sans">
       <Navbar />
 
-      <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-6 pb-28 lg:py-8 space-y-8">
         {/* Back Link & Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#C5A059]/20 pb-6">
           <div>

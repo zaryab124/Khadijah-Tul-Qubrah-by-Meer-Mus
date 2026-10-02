@@ -87,17 +87,17 @@ export const BespokeStudioModal: React.FC<Props> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
-      <div className="relative w-full max-w-2xl bg-[#051712] border border-[#C5A059]/40 rounded-3xl overflow-hidden shadow-2xl text-[#FCFBF7] max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
+      <div className="relative w-full max-w-2xl bg-[#051712] border border-[#C5A059]/40 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl text-[#FCFBF7] max-h-[90dvh] sm:max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="p-6 bg-[#072A20] border-b border-[#C5A059]/30 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#C5A059]/10 border border-[#C5A059]/30 flex items-center justify-center text-[#C5A059]">
-              <Sparkles className="w-5 h-5" />
+        <div className="p-4 sm:p-6 bg-[#072A20] border-b border-[#C5A059]/30 flex items-center justify-between">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#C5A059]/10 border border-[#C5A059]/30 flex items-center justify-center text-[#C5A059]">
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
-              <h3 className="font-serif font-bold text-lg text-white">Create Your Own Dress</h3>
-              <p className="text-xs text-[#FCFBF7]/60">Step {step} of 4: Custom Made Just For You</p>
+              <h3 className="font-serif font-bold text-base sm:text-lg text-white">Create Your Own Dress</h3>
+              <p className="text-[11px] sm:text-xs text-[#FCFBF7]/60">Step {step} of 4: Custom Made Just For You</p>
             </div>
           </div>
           <button
@@ -109,23 +109,26 @@ export const BespokeStudioModal: React.FC<Props> = ({
         </div>
 
         {/* Step Indicator */}
-        <div className="flex bg-[#040e0b] border-b border-[#C5A059]/20 px-6 py-2.5 text-xs text-center">
+        <div className="flex bg-[#040e0b] border-b border-[#C5A059]/20 px-2 sm:px-6 py-2 text-[10px] sm:text-xs text-center font-mono">
           <span className={`flex-1 py-1 font-serif ${step >= 1 ? 'text-[#C5A059] font-bold' : 'text-gray-600'}`}>
             1. Style
           </span>
           <span className={`flex-1 py-1 font-serif ${step >= 2 ? 'text-[#C5A059] font-bold' : 'text-gray-600'}`}>
-            2. Fabric &amp; Work
+            <span className="sm:hidden">2. Fabric</span>
+            <span className="hidden sm:inline">2. Fabric &amp; Work</span>
           </span>
           <span className={`flex-1 py-1 font-serif ${step >= 3 ? 'text-[#C5A059] font-bold' : 'text-gray-600'}`}>
-            3. Measurements
+            <span className="sm:hidden">3. Size</span>
+            <span className="hidden sm:inline">3. Measurements</span>
           </span>
           <span className={`flex-1 py-1 font-serif ${step >= 4 ? 'text-[#C5A059] font-bold' : 'text-gray-600'}`}>
-            4. Review &amp; Submit
+            <span className="sm:hidden">4. Review</span>
+            <span className="hidden sm:inline">4. Review &amp; Submit</span>
           </span>
         </div>
 
         {/* Content Body */}
-        <div className="p-6 overflow-y-auto flex-1 space-y-6">
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-5 sm:space-y-6">
           {step === 1 && (
             <div className="space-y-4">
               <h4 className="font-serif text-base text-white">Choose Your Dress Style</h4>
@@ -322,12 +325,12 @@ export const BespokeStudioModal: React.FC<Props> = ({
         </div>
 
         {/* Footer Navigation Buttons */}
-        <div className="p-4 sm:p-6 bg-[#072A20] border-t border-[#C5A059]/30 flex items-center justify-between">
+        <div className="p-4 sm:p-6 bg-[#072A20] border-t border-[#C5A059]/30 flex items-center justify-between gap-3">
           {step > 1 ? (
             <button
               type="button"
               onClick={() => setStep(step - 1)}
-              className="px-4 py-2 bg-[#051712] hover:bg-[#0b3d2e] border border-[#C5A059]/30 rounded-xl text-xs text-gray-300 flex items-center gap-1.5 transition-all font-serif"
+              className="px-3.5 sm:px-4 py-2 bg-[#051712] hover:bg-[#0b3d2e] border border-[#C5A059]/30 rounded-xl text-xs text-gray-300 flex items-center gap-1.5 transition-all font-serif shrink-0"
             >
               <ArrowLeft className="w-4 h-4" /> Previous
             </button>
@@ -339,17 +342,19 @@ export const BespokeStudioModal: React.FC<Props> = ({
             <button
               type="button"
               onClick={() => setStep(step + 1)}
-              className="px-6 py-2.5 bg-[#C5A059] hover:bg-[#dfbc7a] text-[#051712] font-black text-xs uppercase tracking-wider rounded-xl flex items-center gap-1.5 transition-all shadow-lg"
+              className="px-5 sm:px-6 py-2.5 bg-[#C5A059] hover:bg-[#dfbc7a] text-[#051712] font-black text-xs uppercase tracking-wider rounded-xl flex items-center gap-1.5 transition-all shadow-lg shrink-0"
             >
-              Next Step <ArrowRight className="w-4 h-4" />
+              <span>Next</span> <ArrowRight className="w-4 h-4" />
             </button>
           ) : (
             <button
               type="button"
               onClick={handleSubmit}
-              className="px-6 py-2.5 bg-gradient-to-r from-[#C5A059] via-[#dfbc7a] to-amber-600 text-[#051712] font-black text-xs uppercase tracking-widest rounded-xl flex items-center gap-2 shadow-xl shadow-[#C5A059]/20 hover:brightness-110"
+              className="px-4 sm:px-6 py-2.5 bg-gradient-to-r from-[#C5A059] via-[#dfbc7a] to-amber-600 text-[#051712] font-black text-xs uppercase tracking-widest rounded-xl flex items-center gap-2 shadow-xl shadow-[#C5A059]/20 hover:brightness-110"
             >
-              <Sparkles className="w-4 h-4 text-[#051712]" /> Submit Custom Order Request
+              <Sparkles className="w-4 h-4 text-[#051712] shrink-0" />
+              <span className="sm:hidden">Submit Request</span>
+              <span className="hidden sm:inline">Submit Custom Order Request</span>
             </button>
           )}
         </div>

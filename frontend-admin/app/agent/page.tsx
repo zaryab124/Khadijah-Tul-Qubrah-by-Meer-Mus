@@ -200,9 +200,9 @@ export default function AgentCrmPage() {
       portalName="Fashion CRM & Concierge Agent Hub"
       portalDescription="Omnichannel lead management, high-touch WhatsApp contact logs, consultation scheduling, and custom design conversions."
     >
-      <div className="min-h-screen p-8 max-w-7xl mx-auto text-[#FCFBF7]">
+      <div className="min-h-screen p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto text-[#FCFBF7]">
       {/* Navigation */}
-      <div className="flex items-center gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mb-8">
         <Link href="/" className="text-[#C5A059] hover:underline flex items-center gap-1 text-sm">
           <ArrowLeft className="w-4 h-4" /> Operations Hub
         </Link>

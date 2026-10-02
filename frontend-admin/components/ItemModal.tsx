@@ -111,8 +111,8 @@ export const ItemModal: React.FC<Props> = ({ item, onClose, onAddToCart }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-      <div className="relative w-full max-w-2xl bg-[#051712] border border-[#C5A059]/40 rounded-3xl overflow-hidden shadow-2xl text-[#FCFBF7] max-h-[92vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+      <div className="relative w-full max-w-2xl bg-[#051712] border border-[#C5A059]/40 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl text-[#FCFBF7] max-h-[90dvh] sm:max-h-[92vh] flex flex-col">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -400,7 +400,7 @@ export const ItemModal: React.FC<Props> = ({ item, onClose, onAddToCart }) => {
           <button
             type="button"
             onClick={handleAdd}
-            className="w-full sm:w-auto flex-1 max-w-xs py-3.5 px-6 bg-gradient-to-r from-[#C5A059] via-[#dfbc7a] to-amber-600 text-[#051712] font-black text-xs uppercase tracking-widest rounded-xl hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-2 shadow-xl shadow-[#C5A059]/20"
+            className="w-full sm:w-auto sm:max-w-xs flex-1 py-3.5 px-6 bg-gradient-to-r from-[#C5A059] via-[#dfbc7a] to-amber-600 text-[#051712] font-black text-xs uppercase tracking-widest rounded-xl hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-2 shadow-xl shadow-[#C5A059]/20"
           >
             {isAuthenticated ? (
               <>

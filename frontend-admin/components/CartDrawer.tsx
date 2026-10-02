@@ -181,8 +181,8 @@ export const CartDrawer: React.FC<Props> = ({
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-        <div className="w-screen max-w-md bg-[#051712] border-l border-[#C5A059]/40 text-[#FCFBF7] flex flex-col shadow-2xl">
+      <div className="fixed inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10">
+        <div className="w-screen max-w-full sm:max-w-md bg-[#051712] border-l border-[#C5A059]/40 text-[#FCFBF7] flex flex-col shadow-2xl">
           
           {/* Drawer Header */}
           <div className="p-6 bg-[#072A20] border-b border-[#C5A059]/30 flex items-center justify-between">

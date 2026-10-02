@@ -649,16 +649,16 @@ export default function HauteCoutureApp() {
                   )}
 
                   {/* Action CTA Buttons */}
-                  <div className="flex flex-wrap items-center gap-3 pt-2">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
                     <button
                       onClick={() => setIsBespokeModalOpen(true)}
-                      className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#C5A059] via-[#dfbc7a] to-amber-600 text-[#051712] font-serif font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all shadow-xl shadow-[#C5A059]/25 flex items-center gap-2"
+                      className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#C5A059] via-[#dfbc7a] to-amber-600 text-[#051712] font-serif font-black text-xs uppercase tracking-widest hover:brightness-110 active:scale-95 transition-all shadow-xl shadow-[#C5A059]/25 flex items-center justify-center gap-2"
                     >
                       <Sparkles className="w-4 h-4" /> Create Your Own Dress
                     </button>
                     <a
                       href="#catalog"
-                      className="px-5 py-3.5 rounded-xl bg-[#051712] hover:bg-[#072A20] border border-[#C5A059]/50 text-[#C5A059] hover:text-white font-serif font-bold text-xs uppercase tracking-wider transition-all shadow"
+                      className="w-full sm:w-auto px-5 py-3.5 rounded-xl bg-[#051712] hover:bg-[#072A20] border border-[#C5A059]/50 text-[#C5A059] hover:text-white font-serif font-bold text-xs uppercase tracking-wider transition-all shadow text-center"
                     >
                       Shop Collection &rarr;
                     </a>
@@ -907,8 +907,8 @@ export default function HauteCoutureApp() {
               </div>
             </div>
 
-            {/* Category Filter Pills with Icons (Matching ok-restuerent category scroll) */}
-            <div className="flex overflow-x-auto gap-3 pb-2">
+            {/* Category Filter Pills with Icons (Smooth horizontal touch swipe) */}
+            <div className="flex overflow-x-auto no-scrollbar scroll-smooth gap-2.5 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
               {[
                 { id: 'ALL', label: 'All Clothes', icon: Sparkles },
                 { id: 'Bridal Couture', label: 'Bridal Wear', icon: Crown },
@@ -1876,7 +1876,7 @@ export default function HauteCoutureApp() {
         href={waLink}
         target="_blank"
         rel="noreferrer"
-        className="fixed bottom-20 lg:bottom-6 right-4 sm:right-6 z-40 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white px-4 py-3 rounded-full shadow-2xl shadow-emerald-900/60 border border-emerald-300/40 flex items-center gap-2.5 group transition-all transform hover:scale-105 active:scale-95"
+        className="fixed bottom-20 lg:bottom-6 right-3 sm:right-6 z-40 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white p-3 sm:px-4 sm:py-3 rounded-full shadow-2xl shadow-emerald-900/60 border border-emerald-300/40 flex items-center gap-2.5 group transition-all transform hover:scale-105 active:scale-95"
         title={`Chat directly with Atelier on WhatsApp: ${brandSettings.whatsappNumber}`}
       >
         <div className="relative">

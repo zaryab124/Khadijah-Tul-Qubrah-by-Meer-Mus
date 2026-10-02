@@ -663,9 +663,9 @@ export default function AdminControlCenterPage() {
       portalName="Owner & Executive Admin Console"
       portalDescription="Executive control of financial turnover, product catalog launch, video campaign ads, and audit trail."
     >
-      <div className="min-h-screen p-8 max-w-7xl mx-auto text-gray-200">
+      <div className="min-h-screen p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto text-gray-200">
       {/* Top Breadcrumb & Hub Link */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
         <div className="flex items-center gap-3">
           <Link href="/" className="text-[#C5A059] hover:underline flex items-center gap-1.5 text-sm">
             <ArrowLeft className="w-4 h-4" /> Operations Hub
@@ -805,7 +805,7 @@ export default function AdminControlCenterPage() {
       </div>
 
       {/* Main Tab Navigation */}
-      <div className="flex flex-wrap gap-2 border-b border-[#C5A059]/30 mb-8 pb-1">
+      <div className="flex overflow-x-auto no-scrollbar gap-2 border-b border-[#C5A059]/30 mb-8 pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
         {[
           { key: 'overview', label: 'Executive Overview', icon: TrendingUp },
           { key: 'catalogue', label: 'Catalogue & Master Data', icon: Package },
@@ -822,7 +822,7 @@ export default function AdminControlCenterPage() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key as AdminTab)}
-              className={`px-4 py-2.5 rounded-t-lg text-sm font-medium flex items-center gap-2 transition ${
+              className={`px-4 py-2.5 rounded-t-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap transition ${
                 isActive
                   ? 'bg-[#072A20] text-[#C5A059] border-t-2 border-[#C5A059]'
                   : 'text-gray-400 hover:text-gray-200 hover:bg-[#072A20]/40'
@@ -991,8 +991,8 @@ export default function AdminControlCenterPage() {
                 </button>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm text-gray-300">
+              <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+                <table className="w-full min-w-[650px] text-left text-sm text-gray-300">
                   <thead className="text-xs uppercase bg-[#072A20] text-[#C5A059] border-b border-[#C5A059]/30">
                     <tr>
                       <th className="p-3">Product Name</th>
@@ -1363,8 +1363,8 @@ export default function AdminControlCenterPage() {
           <div className="p-6 rounded-xl bg-[#051c15] border border-[#C5A059]/30">
             <h3 className="text-lg font-serif text-[#FCFBF7] mb-2">Custom Requests & Quotation Engine</h3>
             <p className="text-xs text-gray-400 mb-4">Live inspection of customer custom requests, multi-version quotations (V1, V2, V3...), and payment settlements</p>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-gray-300">
+            <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
+              <table className="w-full min-w-[650px] text-left text-sm text-gray-300">
                 <thead className="text-xs uppercase bg-[#072A20] text-[#C5A059] border-b border-[#C5A059]/30">
                   <tr>
                     <th className="p-3">Request #</th>

@@ -193,9 +193,9 @@ export default function DesignerStudioPage() {
       portalName="Haute Couture Designer Studio"
       portalDescription="Bespoke commission queue, sketch analysis, fabric & craft pricing, and multi-version quotation formulation (V1, V2)."
     >
-      <div className="min-h-screen p-6 md:p-10 max-w-7xl mx-auto">
+      <div className="min-h-screen p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
       {/* Breadcrumb Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-8">
         <div className="flex items-center gap-3">
           <Link href="/" className="text-[#C5A059] hover:underline flex items-center gap-1 text-sm">
             <ArrowLeft className="w-4 h-4" /> Operations Hub

@@ -76,21 +76,21 @@ export const Navbar: React.FC<Props> = ({
             {/* ------------------------------------------------------------------- */}
             {/* 1. LEFT WING: Atelier Selector & Quick Links */}
             {/* ------------------------------------------------------------------- */}
-            <div className="flex items-center gap-2 sm:gap-4 flex-1 justify-start">
+            <div className="flex items-center gap-1.5 sm:gap-4 flex-1 justify-start min-w-0">
               {/* Mobile Drawer Hamburger Button */}
               <button
                 onClick={() => setMobileMenuOpen(true)}
-                className="lg:hidden p-2 rounded-xl bg-[#051712] border border-[#C5A059]/40 text-[#C5A059] hover:text-white"
+                className="lg:hidden p-2 rounded-xl bg-[#051712] border border-[#C5A059]/40 text-[#C5A059] hover:text-white shrink-0"
                 title="Open Navigation Menu"
               >
-                <Menu className="w-5 h-5" />
+                <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
 
               {/* Store Location Pill (Jampur, Pakistan) */}
               {activeBranch && (
                 <button
                   onClick={() => setIsBranchModalOpen(true)}
-                  className="flex items-center gap-2 bg-[#051712] hover:bg-[#072A20] border border-[#C5A059]/30 hover:border-[#C5A059] px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-full transition-all text-left shadow-sm group"
+                  className="flex items-center gap-1.5 sm:gap-2 bg-[#051712] hover:bg-[#072A20] border border-[#C5A059]/30 hover:border-[#C5A059] px-2 py-1.5 sm:px-3.5 sm:py-2 rounded-full transition-all text-left shadow-sm group shrink-0"
                   title="Our Boutique Location: Jampur, Pakistan"
                 >
                   <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#C5A059] shrink-0 group-hover:scale-110 transition-transform" />
@@ -103,9 +103,9 @@ export const Navbar: React.FC<Props> = ({
                     </span>
                   </div>
                   <div className="sm:hidden">
-                    <span className="text-[11px] font-serif font-bold text-white">Jampur, PK</span>
+                    <span className="text-[10px] font-serif font-bold text-white">Jampur</span>
                   </div>
-                  <ChevronDown className="w-3.5 h-3.5 text-[#C5A059]/60 ml-0.5" />
+                  <ChevronDown className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#C5A059]/60 ml-0.5" />
                 </button>
               )}
 
@@ -132,11 +132,11 @@ export const Navbar: React.FC<Props> = ({
             {/* ------------------------------------------------------------------- */}
             {/* 2. CENTERPIECE: Perfectly Centered Brand Insignia & Slogan */}
             {/* ------------------------------------------------------------------- */}
-            <div className="flex flex-col items-center justify-center flex-shrink-0 text-center px-2">
+            <div className="flex flex-col items-center justify-center shrink-0 text-center px-1 sm:px-2">
               <Link href="/" className="flex flex-col items-center group">
-                <div className="flex items-center gap-2 sm:gap-3">
+                <div className="flex items-center gap-1.5 sm:gap-3">
                   {/* Real Royal Velvet Insignia Medallion */}
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full p-0.5 bg-gradient-to-tr from-[#C5A059] via-[#F3E5AB] to-[#99752D] ring-2 ring-[#C5A059]/50 shadow-lg shadow-[#C5A059]/20 group-hover:scale-105 transition-transform overflow-hidden shrink-0">
+                  <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-full p-0.5 bg-gradient-to-tr from-[#C5A059] via-[#F3E5AB] to-[#99752D] ring-2 ring-[#C5A059]/50 shadow-lg shadow-[#C5A059]/20 group-hover:scale-105 transition-transform overflow-hidden shrink-0">
                     <img
                       src="/brand-logo.jpg"
                       alt="KHADIJAH-TUL-QUBRAH by Meer&Mus"
@@ -145,10 +145,10 @@ export const Navbar: React.FC<Props> = ({
                   </div>
 
                   <div className="text-left sm:text-center">
-                    <span className="text-sm sm:text-lg font-serif font-black tracking-widest text-[#FCFBF7] leading-none uppercase block">
+                    <span className="text-xs sm:text-lg font-serif font-black tracking-widest text-[#FCFBF7] leading-none uppercase block">
                       KHADIJAH-TUL-<span className="text-[#C5A059]">QUBRAH</span>
                     </span>
-                    <span className="text-[10px] sm:text-xs block text-[#C5A059] font-serif font-bold tracking-[0.2em] uppercase mt-0.5">
+                    <span className="text-[9px] sm:text-xs block text-[#C5A059] font-serif font-bold tracking-[0.2em] uppercase mt-0.5">
                       by Meer&amp;Mus
                     </span>
                   </div>
@@ -164,11 +164,11 @@ export const Navbar: React.FC<Props> = ({
             {/* ------------------------------------------------------------------- */}
             {/* 3. RIGHT WING: Bespoke Studio, Portals Switcher, Account & Cart */}
             {/* ------------------------------------------------------------------- */}
-            <div className="flex items-center gap-2 sm:gap-3 flex-1 justify-end">
+            <div className="flex items-center gap-1.5 sm:gap-3 flex-1 justify-end min-w-0">
               {/* "Create Your Own" Custom Order CTA */}
               <button
                 onClick={onOpenBespoke}
-                className="hidden md:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#C5A059]/20 to-[#dfbc7a]/20 border border-[#C5A059]/50 text-[#C5A059] hover:bg-[#C5A059] hover:text-[#051712] font-serif font-bold text-xs uppercase tracking-wider transition-all shadow-md group"
+                className="hidden md:flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-[#C5A059]/20 to-[#dfbc7a]/20 border border-[#C5A059]/50 text-[#C5A059] hover:bg-[#C5A059] hover:text-[#051712] font-serif font-bold text-xs uppercase tracking-wider transition-all shadow-md group shrink-0"
               >
                 <Sparkles className="w-3.5 h-3.5 text-[#C5A059] group-hover:text-[#051712] transition-colors" />
                 <span>Create Your Own</span>
@@ -176,10 +176,10 @@ export const Navbar: React.FC<Props> = ({
 
               {/* Customer Account */}
               {isAuthenticated && user ? (
-                <div className="relative">
+                <div className="relative shrink-0">
                   <button
                     onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                    className="flex items-center gap-2 bg-[#051712] border border-[#C5A059]/40 hover:border-[#C5A059] px-2.5 py-1.5 rounded-xl transition-all"
+                    className="flex items-center gap-1.5 bg-[#051712] border border-[#C5A059]/40 hover:border-[#C5A059] px-2 py-1.5 sm:px-2.5 rounded-xl transition-all"
                   >
                     <div className="w-6 h-6 rounded-full bg-[#C5A059]/20 text-[#C5A059] font-bold text-[10px] flex items-center justify-center">
                       {user.name.charAt(0)}
@@ -399,61 +399,57 @@ export const Navbar: React.FC<Props> = ({
       {/* ========================================================================= */}
       {/* PERSISTENT MOBILE BOTTOM TAB NAVIGATION BAR (APP-LIKE UX) */}
       {/* ========================================================================= */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#040e0b]/95 backdrop-blur-lg border-t border-[#C5A059]/30 text-white py-1.5 px-2 flex justify-around items-center shadow-2xl">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#040e0b]/95 backdrop-blur-lg border-t border-[#C5A059]/40 text-white py-1 px-3 flex justify-around items-center shadow-2xl safe-area-bottom">
         <Link
           href="/"
-          className="flex flex-col items-center gap-1 py-1 px-2 text-center text-[#C5A059] hover:text-white"
+          className="flex flex-col items-center justify-center py-1 px-2 text-center text-[#C5A059] hover:text-white transition-colors min-w-[56px]"
         >
-          <Sparkles className="w-4 h-4" />
-          <span className="text-[9px] font-serif font-bold uppercase">Home</span>
+          <Sparkles className="w-4 h-4 mb-0.5" />
+          <span className="text-[9px] font-serif font-bold uppercase tracking-wider">Home</span>
         </Link>
 
         <a
           href="#catalog"
-          className="flex flex-col items-center gap-1 py-1 px-2 text-center text-gray-400 hover:text-[#C5A059]"
+          className="flex flex-col items-center justify-center py-1 px-2 text-center text-gray-400 hover:text-[#C5A059] transition-colors min-w-[56px]"
         >
-          <ShoppingBag className="w-4 h-4" />
-          <span className="text-[9px] font-serif font-bold uppercase">Shop</span>
+          <ShoppingBag className="w-4 h-4 mb-0.5" />
+          <span className="text-[9px] font-serif font-bold uppercase tracking-wider">Shop</span>
         </a>
 
+        {/* Elevated Custom Dress CTA */}
         <button
           onClick={onOpenBespoke}
-          className="flex flex-col items-center gap-1 py-1 px-2 text-center text-[#C5A059] hover:scale-105 transition-transform"
+          className="flex flex-col items-center justify-center -mt-4 group min-w-[60px]"
+          title="Create Your Own Custom Garment"
         >
-          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-[#C5A059] to-amber-600 text-[#051712] flex items-center justify-center shadow-lg -mt-3 ring-2 ring-[#040e0b]">
-            <Scissors className="w-4 h-4 text-[#051712]" />
+          <div className="w-11 h-11 rounded-full bg-gradient-to-r from-[#C5A059] via-[#dfbc7a] to-amber-600 text-[#051712] flex items-center justify-center shadow-xl shadow-[#C5A059]/30 ring-3 ring-[#040e0b] group-active:scale-95 transition-transform">
+            <Scissors className="w-5 h-5 text-[#051712]" />
           </div>
-          <span className="text-[9px] font-serif font-black uppercase text-[#C5A059]">Custom</span>
+          <span className="text-[9px] font-serif font-black uppercase text-[#C5A059] tracking-wider mt-0.5">Custom</span>
         </button>
 
         <Link
           href="/order-tracking/ORD-2026-KTQ"
-          className="flex flex-col items-center gap-1 py-1 px-2 text-center text-gray-400 hover:text-[#C5A059]"
+          className="flex flex-col items-center justify-center py-1 px-2 text-center text-gray-400 hover:text-[#C5A059] transition-colors min-w-[56px]"
         >
-          <Truck className="w-4 h-4" />
-          <span className="text-[9px] font-serif font-bold uppercase">Track</span>
-        </Link>
-
-        <Link
-          href={isAuthenticated ? "/order-tracking/ORD-2026-KTQ" : "/register"}
-          className="flex flex-col items-center gap-1 py-1 px-2 text-center text-gray-400 hover:text-[#C5A059]"
-        >
-          <User className="w-4 h-4" />
-          <span className="text-[9px] font-serif font-bold uppercase">{isAuthenticated ? 'Account' : 'Sign In'}</span>
+          <Truck className="w-4 h-4 mb-0.5" />
+          <span className="text-[9px] font-serif font-bold uppercase tracking-wider">Track</span>
         </Link>
 
         {onOpenCart && (
           <button
             onClick={onOpenCart}
-            className="flex flex-col items-center gap-1 py-1 px-2 text-center text-gray-400 hover:text-[#C5A059] relative"
+            className="flex flex-col items-center justify-center py-1 px-2 text-center text-gray-400 hover:text-[#C5A059] transition-colors relative min-w-[56px]"
           >
-            <ShoppingBag className="w-4 h-4" />
-            <span className="text-[9px] font-serif font-bold uppercase">Bag</span>
-            {cartCount > 0 && (
-              <span className="absolute top-0 right-1 w-4 h-4 bg-[#C5A059] text-[#051712] rounded-full text-[9px] font-black flex items-center justify-center">
-                {cartCount}
-              </span>
-            )}
+            <div className="relative">
+              <ShoppingBag className="w-4 h-4 mb-0.5" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 bg-[#C5A059] text-[#051712] rounded-full text-[9px] font-black flex items-center justify-center shadow">
+                  {cartCount}
+                </span>
+              )}
+            </div>
+            <span className="text-[9px] font-serif font-bold uppercase tracking-wider">Bag</span>
           </button>
         )}
       </nav>
