@@ -110,33 +110,24 @@ export const Navbar: React.FC<Props> = ({
               )}
 
               {/* Desktop Quick Nav Links */}
-              <nav className="hidden lg:flex items-center gap-4 text-xs font-serif tracking-wider uppercase ml-2 text-white/80">
+              <nav className="hidden xl:flex items-center gap-5 text-xs font-serif tracking-wider uppercase ml-3 text-white/80 whitespace-nowrap">
                 <a href="#catalog" className="hover:text-[#C5A059] transition-colors py-1">
                   Shop Collection
                 </a>
-                <Link href="/order-tracking/ORD-2026-KTQ" className="hover:text-[#C5A059] transition-colors py-1 flex items-center gap-1">
+                <Link href="/order-tracking/ORD-2026-KTQ" className="hover:text-[#C5A059] transition-colors py-1 flex items-center gap-1.5">
                   <Truck className="w-3.5 h-3.5 text-[#C5A059]" /> Track Order
                 </Link>
-                <a
-                  href={waLink}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="hover:text-emerald-300 text-emerald-400 font-bold transition-colors py-1 flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-950/40 border border-emerald-500/30"
-                  title={`Chat with Atelier on WhatsApp: ${brandSettings.whatsappNumber}`}
-                >
-                  <Phone className="w-3 h-3 text-emerald-400 fill-emerald-400" /> WhatsApp
-                </a>
               </nav>
             </div>
 
             {/* ------------------------------------------------------------------- */}
             {/* 2. CENTERPIECE: Perfectly Centered Brand Insignia & Slogan */}
             {/* ------------------------------------------------------------------- */}
-            <div className="flex flex-col items-center justify-center shrink-0 text-center px-1 sm:px-2">
+            <div className="flex flex-col items-center justify-center shrink-0 text-center px-2 sm:px-4 z-10">
               <Link href="/" className="flex flex-col items-center group">
-                <div className="flex items-center gap-1.5 sm:gap-3">
+                <div className="flex items-center gap-2 sm:gap-3">
                   {/* Real Royal Velvet Insignia Medallion */}
-                  <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-full p-0.5 bg-gradient-to-tr from-[#C5A059] via-[#F3E5AB] to-[#99752D] ring-2 ring-[#C5A059]/50 shadow-lg shadow-[#C5A059]/20 group-hover:scale-105 transition-transform overflow-hidden shrink-0">
+                  <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-full p-0.5 bg-gradient-to-tr from-[#C5A059] via-[#F3E5AB] to-[#99752D] ring-2 ring-[#C5A059]/50 shadow-lg shadow-[#C5A059]/20 group-hover:scale-105 transition-transform overflow-hidden shrink-0">
                     <img
                       src="/brand-logo.jpg"
                       alt="KHADIJAH-TUL-QUBRAH by Meer&Mus"
@@ -144,7 +135,7 @@ export const Navbar: React.FC<Props> = ({
                     />
                   </div>
 
-                  <div className="text-left sm:text-center">
+                  <div className="text-left sm:text-center whitespace-nowrap">
                     <span className="text-xs sm:text-lg font-serif font-black tracking-widest text-[#FCFBF7] leading-none uppercase block">
                       KHADIJAH-TUL-<span className="text-[#C5A059]">QUBRAH</span>
                     </span>
@@ -155,7 +146,7 @@ export const Navbar: React.FC<Props> = ({
                 </div>
 
                 {/* Centered Slogan */}
-                <span className="hidden sm:block text-[8px] sm:text-[9px] font-mono font-bold tracking-[0.35em] uppercase text-[#dfbc7a] mt-1">
+                <span className="hidden sm:block text-[8px] sm:text-[9px] font-mono font-bold tracking-[0.35em] uppercase text-[#dfbc7a] mt-1 whitespace-nowrap">
                   STAY HONEST , STAND LONG
                 </span>
               </Link>
