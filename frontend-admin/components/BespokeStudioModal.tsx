@@ -18,8 +18,8 @@ export const BespokeStudioModal: React.FC<Props> = ({
   const { user } = useAuth();
   const [step, setStep] = useState<number>(1);
   const [silhouette, setSilhouette] = useState('Bridal Peshwas');
-  const [fabric, setFabric] = useState('Micro Velvet 9000');
-  const [craft, setCraft] = useState('24k Metallic Tilla & Antique Zardozi');
+  const [fabric, setFabric] = useState('Cotton');
+  const [craft, setCraft] = useState('Hand Embroidery & Motif');
   const [colour, setColour] = useState('Imperial Emerald');
   const [measurements, setMeasurements] = useState({
     chest: '36',
@@ -49,18 +49,20 @@ export const BespokeStudioModal: React.FC<Props> = ({
   ];
 
   const fabrics = [
-    'Micro Velvet 9000',
-    'Pure Loomed Organza Silk',
-    'Raw Silk 80g',
-    'Chiffon Georgette',
-    'Pure Tissue Silk Metallic',
+    'Cotton',
+    'Khaddar',
+    'Bin Saeed Lawn',
+    'Linen',
+    'Embroidery Fabric',
+    'Karandi',
+    'Gents Suits (Wool & Washing Wear)',
   ];
 
   const crafts = [
-    '24k Metallic Tilla & Antique Zardozi',
-    'Hand-Cut Gotapatti & Resham Threadwork',
-    'Freshwater Pearls & Fine Dabka Motifs',
-    'Mirror Work & French Knots',
+    'Hand Embroidery & Motif',
+    'Thread Work & Cutwork',
+    'Fine Needlework & Zari',
+    'Mirror Work & Resham',
   ];
 
   const colours = [

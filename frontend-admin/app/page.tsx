@@ -350,8 +350,8 @@ export default function HauteCoutureApp() {
   const [customForm, setCustomForm] = useState({
     silhouette: 'Peshwas & Dupatta',
     colour: 'Royal Emerald Green',
-    fabric: 'Micro Velvet 9000',
-    craft: 'Zardozi Handwork (Metallic Gold)',
+    fabric: 'Cotton',
+    craft: 'Hand Embroidery & Motif',
     chest: '36',
     waist: '28',
     hip: '38',
@@ -837,7 +837,7 @@ export default function HauteCoutureApp() {
                               setCustomForm((prev) => ({
                                 ...prev,
                                 craft: item.craftBadge,
-                                fabric: item.fabric ? item.fabric.split('&')[0].trim() : 'Micro Velvet 9000',
+                                fabric: item.fabric ? item.fabric.split('&')[0].trim() : 'Cotton',
                               }));
                               const el = document.getElementById('bespoke-studio');
                               el?.scrollIntoView({ behavior: 'smooth' });
@@ -1127,10 +1127,13 @@ export default function HauteCoutureApp() {
                     onChange={(e) => setCustomForm({ ...customForm, fabric: e.target.value })}
                     className="w-full bg-[#051712] border border-[#C5A059]/40 rounded-lg p-2.5 text-xs text-[#FCFBF7] focus:outline-none focus:border-[#C5A059]"
                   >
-                    <option value="Micro Velvet 9000">Pure Velvet (Micro 9000)</option>
-                    <option value="Pure Katan Silk">Pure Silk</option>
-                    <option value="Hand-loomed 80g Raw Silk">Raw Silk</option>
-                    <option value="Pure French Silk Organza">Organza Silk</option>
+                    <option value="Cotton">Cotton</option>
+                    <option value="Khaddar">Khaddar</option>
+                    <option value="Bin Saeed Lawn">Bin Saeed Lawn</option>
+                    <option value="Linen">Linen</option>
+                    <option value="Embroidery">Embroidery</option>
+                    <option value="Karandi">Karandi</option>
+                    <option value="Gents Suits (Wool & Washing Wear)">Gents Suits (Wool &amp; Washing Wear)</option>
                   </select>
                 </div>
 

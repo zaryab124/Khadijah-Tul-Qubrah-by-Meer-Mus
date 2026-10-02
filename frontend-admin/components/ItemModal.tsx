@@ -48,22 +48,19 @@ export const ItemModal: React.FC<Props> = ({ item, onClose, onAddToCart }) => {
   const { isAuthenticated } = useAuth();
   const [stitchingOption, setStitchingOption] = useState<'STITCHED' | 'UNSTITCHED'>('STITCHED');
   const [selectedSize, setSelectedSize] = useState<string>('M');
-  const [selectedFabric, setSelectedFabric] = useState<string>('');
-  const [selectedCraft, setSelectedCraft] = useState<string>('');
   const [quantity, setQuantity] = useState<number>(1);
-  const [specialNotes, setSpecialNotes] = useState<string>('');
   const [showSizeGuide, setShowSizeGuide] = useState<boolean>(false);
 
   if (!item) return null;
 
   // Determine current active prices
-  const currentStitchedPrice = item.stitchedPrice || item.basePrice || 485000;
+  const currentStitchedPrice = item.stitchedPrice || item.basePrice || 12500;
   const currentUnstitchedPrice = item.unstitchedPrice || Math.round(currentStitchedPrice * 0.72);
   const unitPrice = stitchingOption === 'STITCHED' ? currentStitchedPrice : currentUnstitchedPrice;
   const totalPrice = unitPrice * quantity;
 
-  const currentFabric = selectedFabric || item.fabric;
-  const currentCraft = selectedCraft || item.craft;
+  const currentFabric = item.fabric || item.category;
+  const currentCraft = item.craft || 'Artisan Handcrafted';
 
   const sizes = [
     { label: 'XS', bust: '32"', waist: '26"', hip: '36"' },
@@ -73,21 +70,6 @@ export const ItemModal: React.FC<Props> = ({ item, onClose, onAddToCart }) => {
     { label: 'XL', bust: '41"', waist: '36"', hip: '46"' },
     { label: 'XXL', bust: '44"', waist: '39"', hip: '49"' },
     { label: 'Custom Fit', bust: 'Bespoke', waist: 'Bespoke', hip: 'Bespoke' },
-  ];
-
-  const fabrics = [
-    'Micro Velvet 9000',
-    'Pure Loomed Silk',
-    'Raw Silk 80g',
-    'Chiffon Georgette',
-    'Organza Net',
-  ];
-
-  const crafts = [
-    '24k Metallic Tilla & Antique Zardozi',
-    'Hand-Cut Gotapatti & Resham',
-    'Dabka & Freshwater Pearls',
-    'Fine Thread Shadow Work',
   ];
 
   const handleAdd = () => {
@@ -105,7 +87,6 @@ export const ItemModal: React.FC<Props> = ({ item, onClose, onAddToCart }) => {
       fabric: currentFabric,
       craft: currentCraft,
       quantity,
-      specialNotes: specialNotes.trim() ? specialNotes : undefined,
     });
     onClose();
   };
@@ -296,68 +277,56 @@ export const ItemModal: React.FC<Props> = ({ item, onClose, onAddToCart }) => {
               </div>
             )}
 
-            {/* Base Fabric Swatch Selection */}
-            <div className="space-y-2">
-              <label className="text-xs uppercase font-serif font-bold text-[#C5A059] tracking-wider block">
-                2. Base Fabric
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {fabrics.map((f) => (
-                  <button
-                    key={f}
-                    type="button"
-                    onClick={() => setSelectedFabric(f)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-serif transition-all border ${
-                      currentFabric === f
-                        ? 'bg-[#C5A059]/20 border-[#C5A059] text-white font-bold'
-                        : 'bg-[#072A20] border-[#C5A059]/20 text-gray-400 hover:text-white'
-                    }`}
-                  >
-                    {f}
-                  </button>
-                ))}
+            {/* Atelier Verified Specifications (Added Exclusively by Admin) */}
+            <div className="p-4 rounded-2xl bg-[#072A20]/80 border border-[#C5A059]/40 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs uppercase font-serif font-bold text-[#C5A059] tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-[#C5A059]" /> Authentic Garment Details
+                </span>
+                <span className="text-[10px] text-gray-400 font-mono">
+                  Verified Atelier Specification
+                </span>
               </div>
-            </div>
 
-            {/* Hand-Craft Embellishment */}
-            <div className="space-y-2">
-              <label className="text-xs uppercase font-serif font-bold text-[#C5A059] tracking-wider block">
-                3. Embroidery &amp; Craft Details
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {crafts.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setSelectedCraft(c)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-serif transition-all border ${
-                      currentCraft === c
-                        ? 'bg-[#C5A059]/20 border-[#C5A059] text-white font-bold'
-                        : 'bg-[#072A20] border-[#C5A059]/20 text-gray-400 hover:text-white'
-                    }`}
-                  >
-                    {c}
-                  </button>
-                ))}
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="p-3 rounded-xl bg-[#051712] border border-[#C5A059]/20">
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-serif">Fabric</span>
+                  <span className="font-serif font-bold text-white text-sm mt-0.5 block">
+                    {item.fabric || item.category}
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-[#051712] border border-[#C5A059]/20">
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-serif">Craft &amp; Embellishment</span>
+                  <span className="font-serif font-bold text-white text-sm mt-0.5 block">
+                    {item.craft || 'Artisan Handcrafted'}
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-[#051712] border border-[#C5A059]/20">
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-serif">Package Type</span>
+                  <span className="font-mono text-gray-200 text-xs mt-0.5 block">
+                    {stitchingOption === 'STITCHED' ? 'Complete Tailored Garment' : '3-Piece Unstitched Suit'}
+                  </span>
+                </div>
+
+                <div className="p-3 rounded-xl bg-[#051712] border border-[#C5A059]/20">
+                  <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-serif">Dispatch &amp; Delivery</span>
+                  <span className="font-mono text-gray-200 text-xs mt-0.5 block">
+                    {stitchingOption === 'STITCHED'
+                      ? (item.turnaroundDays || 'Tailored in 14 - 21 Days')
+                      : 'Ready to Dispatch (2-3 Days)'}
+                  </span>
+                </div>
               </div>
-            </div>
 
-            {/* Special Tailoring Notes */}
-            <div className="space-y-2">
-              <label className="text-xs uppercase font-serif font-bold text-[#C5A059] tracking-wider block">
-                4. Special Instructions (Optional)
-              </label>
-              <textarea
-                rows={2}
-                value={specialNotes}
-                onChange={(e) => setSpecialNotes(e.target.value)}
-                placeholder={
-                  stitchingOption === 'STITCHED'
-                    ? 'Tell us your height, preferred neckline, sleeve length, or any special requests...'
-                    : 'Special packing instructions or delivery date requirements...'
-                }
-                className="w-full bg-[#072A20] border border-[#C5A059]/30 rounded-xl p-3 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#C5A059]"
-              />
+              {/* Inclusions & Buyer Notes from Admin */}
+              {item.description && (
+                <div className="pt-2.5 border-t border-[#C5A059]/20 text-xs text-gray-300 font-sans leading-relaxed">
+                  <span className="text-[#C5A059] font-serif font-bold block mb-1">Garment Notes &amp; Specifications:</span>
+                  <p>{item.description}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -178,6 +178,7 @@ export default function AdminControlCenterPage() {
     unstitchedPrice: 8500,
     fabric: 'Pure Cotton',
     craft: 'Hand Embroidery & Motif',
+    turnaroundDays: 'Ready to Dispatch (2-3 Days)',
     imageUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80',
     description: '',
   });
@@ -341,10 +342,12 @@ export default function AdminControlCenterPage() {
   ]);
 
   const [fabrics, setFabrics] = useState([
-    { id: 'fab-1', name: 'Micro Velvet 9000', pricePerMeter: 4500, isAvailable: true },
-    { id: 'fab-2', name: 'Pure Kimkhab Brocade', pricePerMeter: 12000, isAvailable: true },
-    { id: 'fab-3', name: 'Katan Silk (Pure 80g)', pricePerMeter: 6500, isAvailable: true },
-    { id: 'fab-4', name: 'Pure Silk Organza', pricePerMeter: 3800, isAvailable: false },
+    { id: 'fab-1', name: 'Cotton', pricePerMeter: 1200, isAvailable: true },
+    { id: 'fab-2', name: 'Khaddar', pricePerMeter: 1400, isAvailable: true },
+    { id: 'fab-3', name: 'Bin Saeed Lawn', pricePerMeter: 1800, isAvailable: true },
+    { id: 'fab-4', name: 'Linen', pricePerMeter: 1500, isAvailable: true },
+    { id: 'fab-5', name: 'Karandi', pricePerMeter: 1900, isAvailable: true },
+    { id: 'fab-6', name: 'Gents Suits (Wool & Washing Wear)', pricePerMeter: 2200, isAvailable: true },
   ]);
 
   const [craftOptions, setCraftOptions] = useState([
@@ -424,11 +427,12 @@ export default function AdminControlCenterPage() {
     setProductForm({
       name: prod.name,
       sku: prod.sku,
-      category: prod.category,
-      stitchedPrice: prod.stitchedPrice || prod.price,
-      unstitchedPrice: prod.unstitchedPrice || Math.round((prod.stitchedPrice || prod.price) * 0.72),
-      fabric: prod.fabric || 'Micro Velvet 9000 & Loomed Silk',
-      craft: prod.craft || '24k Metallic Tilla & Antique Zardozi',
+      category: prod.category || 'Cotton',
+      stitchedPrice: prod.stitchedPrice || prod.price || 12500,
+      unstitchedPrice: prod.unstitchedPrice || Math.round((prod.stitchedPrice || prod.price || 12500) * 0.72),
+      fabric: prod.fabric || 'Pure Cotton',
+      craft: prod.craft || 'Hand Embroidery',
+      turnaroundDays: prod.turnaroundDays || prod.turnaround_days || 'Ready to Dispatch (2-3 Days)',
       imageUrl: prod.imageUrl || '',
       description: prod.description || '',
     });
@@ -440,12 +444,13 @@ export default function AdminControlCenterPage() {
     setProductForm({
       name: '',
       sku: `KTQ-${Date.now().toString().slice(-4)}`,
-      category: 'Bridal Couture',
-      stitchedPrice: 480000,
-      unstitchedPrice: 340000,
-      fabric: 'Micro Velvet 9000 & Loomed Silk',
-      craft: '24k Metallic Tilla & Antique Zardozi',
-      imageUrl: mediaGallery[0]?.imageUrl || 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80',
+      category: 'Cotton',
+      stitchedPrice: 12500,
+      unstitchedPrice: 8500,
+      fabric: 'Pure Cotton',
+      craft: 'Hand Embroidery',
+      turnaroundDays: 'Ready to Dispatch (2-3 Days)',
+      imageUrl: mediaGallery[0]?.imageUrl || '',
       description: '',
     });
     setIsProductModalOpen(true);
@@ -554,6 +559,7 @@ export default function AdminControlCenterPage() {
               price: sPrice,
               fabric: productForm.fabric,
               craft: productForm.craft,
+              turnaroundDays: productForm.turnaroundDays,
               imageUrl: productForm.imageUrl,
               description: productForm.description,
             }
@@ -571,13 +577,14 @@ export default function AdminControlCenterPage() {
           unstitched_price: uPrice,
           fabric: productForm.fabric,
           craft: productForm.craft,
+          turnaround_days: productForm.turnaroundDays,
           image_url: productForm.imageUrl,
           description: productForm.description,
         });
       } catch (err) {
         console.warn('Supabase update sync:', err);
       }
-      setActionSuccessMessage(`Updated product "${productForm.name}" with Stitched & Unstitched prices.`);
+      setActionSuccessMessage(`Updated product "${productForm.name}" with verified buyer specifications.`);
     } else {
       const newProd = {
         id: `prod-${Date.now()}`,
@@ -589,6 +596,7 @@ export default function AdminControlCenterPage() {
         price: sPrice,
         fabric: productForm.fabric,
         craft: productForm.craft,
+        turnaroundDays: productForm.turnaroundDays,
         imageUrl: productForm.imageUrl,
         description: productForm.description,
         isActive: true,
@@ -607,6 +615,7 @@ export default function AdminControlCenterPage() {
           unstitched_price: uPrice,
           fabric: productForm.fabric,
           craft: productForm.craft,
+          turnaround_days: productForm.turnaroundDays,
           image_url: productForm.imageUrl,
           description: productForm.description,
           is_active: true,
@@ -1176,13 +1185,14 @@ export default function AdminControlCenterPage() {
                             setProductForm({
                               name: med.title,
                               sku: `KTQ-${Date.now().toString().slice(-4)}`,
-                              category: med.category || 'Bridal Couture',
-                              stitchedPrice: 480000,
-                              unstitchedPrice: 340000,
-                              fabric: 'Micro Velvet 9000 & Loomed Silk',
-                              craft: '24k Metallic Tilla & Antique Zardozi',
+                              category: med.category || 'Cotton',
+                              stitchedPrice: 12500,
+                              unstitchedPrice: 8500,
+                              fabric: 'Pure Cotton',
+                              craft: 'Hand Embroidery & Motif',
+                              turnaroundDays: 'Ready to Dispatch (2-3 Days)',
                               imageUrl: med.imageUrl,
-                              description: `Handcrafted ${med.title} featuring intricate artisan needlework and luxury fabric yardage.`,
+                              description: `Handcrafted ${med.title} featuring authentic artisan needlework.`,
                             });
                             setIsProductModalOpen(true);
                           }}
@@ -1962,30 +1972,47 @@ export default function AdminControlCenterPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-[#C5A059] font-bold uppercase tracking-wider mb-1">
-                    Fabric
-                  </label>
-                  <input
-                    type="text"
-                    value={productForm.fabric}
-                    onChange={(e) => setProductForm({ ...productForm, fabric: e.target.value })}
-                    className="w-full bg-[#072A20] border border-[#C5A059]/40 rounded-xl p-2.5 text-white focus:outline-none focus:border-[#C5A059]"
-                    placeholder="Micro Velvet 9000 & Loomed Silk"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[#C5A059] font-bold uppercase tracking-wider mb-1">
-                    Handwork &amp; Craft
-                  </label>
-                  <input
-                    type="text"
-                    value={productForm.craft}
-                    onChange={(e) => setProductForm({ ...productForm, craft: e.target.value })}
-                    className="w-full bg-[#072A20] border border-[#C5A059]/40 rounded-xl p-2.5 text-white focus:outline-none focus:border-[#C5A059]"
-                    placeholder="24k Metallic Tilla & Antique Zardozi"
-                  />
+              <div className="p-3 rounded-xl bg-[#051712] border border-[#C5A059]/30">
+                <span className="text-[11px] text-[#C5A059] font-bold block mb-2 uppercase tracking-wider">
+                  Product Details for Buyers (Displayed on Website)
+                </span>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-gray-300 text-xs font-semibold mb-1">
+                      Fabric (e.g. Cotton, Lawn, Khaddar)
+                    </label>
+                    <input
+                      type="text"
+                      value={productForm.fabric}
+                      onChange={(e) => setProductForm({ ...productForm, fabric: e.target.value })}
+                      className="w-full bg-[#072A20] border border-[#C5A059]/40 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-[#C5A059]"
+                      placeholder="e.g. Pure Cotton, Khaddar, Bin Saeed Lawn, Linen, Karandi"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-300 text-xs font-semibold mb-1">
+                      Handwork &amp; Craft (e.g. Embroidery)
+                    </label>
+                    <input
+                      type="text"
+                      value={productForm.craft}
+                      onChange={(e) => setProductForm({ ...productForm, craft: e.target.value })}
+                      className="w-full bg-[#072A20] border border-[#C5A059]/40 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-[#C5A059]"
+                      placeholder="e.g. Hand Embroidery, Thread Work, Digital Print, Plain"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-300 text-xs font-semibold mb-1">
+                      Dispatch / Turnaround Time
+                    </label>
+                    <input
+                      type="text"
+                      value={productForm.turnaroundDays}
+                      onChange={(e) => setProductForm({ ...productForm, turnaroundDays: e.target.value })}
+                      className="w-full bg-[#072A20] border border-[#C5A059]/40 rounded-xl p-2.5 text-white text-xs focus:outline-none focus:border-[#C5A059]"
+                      placeholder="e.g. Ready to Dispatch (2-3 Days)"
+                    />
+                  </div>
                 </div>
               </div>
 
