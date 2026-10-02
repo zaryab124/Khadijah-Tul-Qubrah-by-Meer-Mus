@@ -188,6 +188,36 @@ export async function updateProductInSupabase(
 }
 
 /**
+ * Delete a product permanently from Supabase
+ */
+export async function deleteProductFromSupabase(
+  idOrSku: string
+): Promise<{ success: boolean; error?: string }> {
+  // Try by ID first, fallback to SKU
+  const isUuid = idOrSku.includes('-') && idOrSku.length === 36;
+  const res = await supabaseRestQuery('products', {
+    method: 'DELETE',
+    query: isUuid ? { id: `eq.${idOrSku}` } : { sku: `eq.${idOrSku}` },
+  });
+  if (res.error) return { success: false, error: res.error };
+  return { success: true };
+}
+
+/**
+ * Delete an image from Supabase media gallery
+ */
+export async function deleteMediaGalleryItemFromSupabase(
+  id: string
+): Promise<{ success: boolean; error?: string }> {
+  const res = await supabaseRestQuery('media_gallery', {
+    method: 'DELETE',
+    query: { id: `eq.${id}` },
+  });
+  if (res.error) return { success: false, error: res.error };
+  return { success: true };
+}
+
+/**
  * Fetch media gallery pictures from Supabase
  */
 export async function fetchMediaGalleryFromSupabase(): Promise<SupabaseMediaGalleryRow[] | null> {

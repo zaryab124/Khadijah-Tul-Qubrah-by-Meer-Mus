@@ -48,6 +48,8 @@ import {
   fetchMediaGalleryFromSupabase,
   createProductInSupabase,
   updateProductInSupabase,
+  deleteProductFromSupabase,
+  deleteMediaGalleryItemFromSupabase,
   addMediaGalleryItem,
   fetchOrdersFromSupabase,
   fetchCustomRequestsFromSupabase,
@@ -137,105 +139,11 @@ export default function AdminControlCenterPage() {
 
   const [actionSuccessMessage, setActionSuccessMessage] = useState<string | null>(null);
 
-  // Garment Products with Stitched vs Unstitched Pricing Criteria
-  const [products, setProducts] = useState([
-    {
-      id: 'prod-1',
-      name: 'The Emerald Zardozi Peshwas',
-      sku: 'KTQ-PESH-001',
-      category: 'Bridal Couture',
-      unstitchedPrice: 345000,
-      stitchedPrice: 485000,
-      price: 485000,
-      fabric: 'Micro Velvet 9000 & Loomed Silk',
-      craft: '24k Metallic Tilla & Antique Zardozi',
-      imageUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80',
-      description: 'Sculpted from imperial Micro Velvet 9000 in jewel-toned emerald. Paired with pure silk organza dupatta.',
-      isActive: true,
-    },
-    {
-      id: 'prod-2',
-      name: 'Bespoke Tilla Silk Anarkali',
-      sku: 'KTQ-ANAR-002',
-      category: 'Haute Couture',
-      unstitchedPrice: 240000,
-      stitchedPrice: 340000,
-      price: 340000,
-      fabric: 'Pure Katan Silk (32 Kalis)',
-      craft: 'Marori Threadwork & Dabka Cuffs',
-      imageUrl: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1200&q=80',
-      description: 'Flowing pure Katan silk silhouette with 32 hand-pleated kalis.',
-      isActive: true,
-    },
-    {
-      id: 'prod-3',
-      name: 'Marori Raw Silk Lehenga Set',
-      sku: 'KTQ-LEH-003',
-      category: 'Bridal Couture',
-      unstitchedPrice: 440000,
-      stitchedPrice: 620000,
-      price: 620000,
-      fabric: '80g Hand-Loomed Raw Silk',
-      craft: 'Heavy Cutwork & Kora Dabka Zardozi',
-      imageUrl: 'https://images.unsplash.com/photo-1594223274512-ad4803739b7c?auto=format&fit=crop&w=1200&q=80',
-      description: 'Regal bridal lehenga set crafted on hand-loomed 80g raw silk.',
-      isActive: true,
-    },
-    {
-      id: 'prod-4',
-      name: 'Handcrafted Organza Dupatta & Kurta',
-      sku: 'KTQ-DUP-004',
-      category: 'Luxury Pret',
-      unstitchedPrice: 75000,
-      stitchedPrice: 115000,
-      price: 115000,
-      fabric: 'Pure French Silk Organza',
-      craft: 'Resham Jaal & Freshwater Pearls',
-      imageUrl: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=1200&q=80',
-      description: 'Delicate French silk organza shirt and dupatta adorned with hand-stitched seed pearls.',
-      isActive: false,
-    },
-  ]);
+  // Garment Products with Stitched vs Unstitched Pricing Criteria (Real Base Only)
+  const [products, setProducts] = useState<any[]>([]);
 
-  // Media Gallery Photos Managed by Admin
-  const [mediaGallery, setMediaGallery] = useState([
-    {
-      id: 'med-1',
-      title: 'Emerald Velvet Peshwas - Front View',
-      imageUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80',
-      category: 'Bridal Couture',
-    },
-    {
-      id: 'med-2',
-      title: 'Bespoke Tilla Silk Anarkali - Mughal Jaal',
-      imageUrl: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1200&q=80',
-      category: 'Haute Couture',
-    },
-    {
-      id: 'med-3',
-      title: 'Marori Raw Silk Bridal Lehenga',
-      imageUrl: 'https://images.unsplash.com/photo-1594223274512-ad4803739b7c?auto=format&fit=crop&w=1200&q=80',
-      category: 'Bridal Couture',
-    },
-    {
-      id: 'med-4',
-      title: 'French Silk Organza Kurta & Dupatta',
-      imageUrl: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=1200&q=80',
-      category: 'Luxury Pret',
-    },
-    {
-      id: 'med-5',
-      title: 'Imperial Crimson Farshi Gharara',
-      imageUrl: 'https://images.unsplash.com/photo-1518049362265-d5b2a6467637?auto=format&fit=crop&w=1200&q=80',
-      category: 'Bridal Couture',
-    },
-    {
-      id: 'med-6',
-      title: 'Gold Tissue Saree Pallu Handwork',
-      imageUrl: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&w=1200&q=80',
-      category: 'Formal Atelier',
-    },
-  ]);
+  // Media Gallery Photos Managed by Admin (Real Base Only)
+  const [mediaGallery, setMediaGallery] = useState<any[]>([]);
 
   // Product Add / Edit Modal State
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -475,12 +383,23 @@ export default function AdminControlCenterPage() {
     });
   };
 
-  const handleExecuteDestruction = () => {
+  const handleExecuteDestruction = async () => {
     const { entityTable, entityId, entityName } = confirmModal;
 
     if (entityTable === 'products') {
-      setProducts((prev) =>
-        prev.map((p) => (p.id === entityId ? { ...p, isActive: false } : p)),
+      // 1. Remove from state immediately
+      const updated = products.filter((p) => p.id !== entityId && p.sku !== entityId);
+      setProducts(updated);
+      syncLocalCatalog(updated);
+
+      // 2. Permanently delete from Supabase so it never reappears on reload
+      deleteProductFromSupabase(entityId).catch((e) =>
+        console.warn('Supabase product delete err:', e)
+      );
+    } else if (entityTable === 'media_gallery') {
+      setMediaGallery((prev) => prev.filter((m) => m.id !== entityId));
+      deleteMediaGalleryItemFromSupabase(entityId).catch((e) =>
+        console.warn('Supabase media delete err:', e)
       );
     } else if (entityTable === 'fabrics') {
       setFabrics((prev) =>
@@ -493,7 +412,7 @@ export default function AdminControlCenterPage() {
     }
 
     setConfirmModal({ ...confirmModal, isOpen: false });
-    setActionSuccessMessage(`Successfully updated "${entityName}" with verified audit logging.`);
+    setActionSuccessMessage(`Successfully deleted "${entityName}" permanently across live Supabase & local atelier.`);
     setTimeout(() => setActionSuccessMessage(null), 4000);
   };
 
@@ -677,7 +596,7 @@ export default function AdminControlCenterPage() {
       syncLocalCatalog(updatedList);
 
       try {
-        await createProductInSupabase({
+        const res = await createProductInSupabase({
           name: productForm.name,
           sku: productForm.sku,
           category: productForm.category,
@@ -689,10 +608,16 @@ export default function AdminControlCenterPage() {
           description: productForm.description,
           is_active: true,
         });
+        if (res.success && res.data?.id) {
+          newProd.id = res.data.id;
+          const refreshed = [newProd, ...products];
+          setProducts(refreshed);
+          syncLocalCatalog(refreshed);
+        }
       } catch (err) {
         console.warn('Supabase create sync:', err);
       }
-      setActionSuccessMessage(`Created new garment "${productForm.name}" successfully.`);
+      setActionSuccessMessage(`Created new garment "${productForm.name}" in live Supabase catalog.`);
     }
 
     setIsProductModalOpen(false);

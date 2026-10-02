@@ -215,7 +215,7 @@ export default function HauteCoutureApp() {
           // Merge: Put local admin items with custom photos first, deduplicated by SKU
           const remoteSkus = new Set(formattedRemote.map((p) => p.sku));
           const localFormatted = localProducts
-            .filter((lp) => !remoteSkus.has(lp.sku))
+            .filter((lp) => lp.isActive !== false && !remoteSkus.has(lp.sku))
             .map((lp) => ({
               id: lp.id || lp.sku,
               name: lp.name,
@@ -235,21 +235,23 @@ export default function HauteCoutureApp() {
           setProducts([...localFormatted, ...formattedRemote]);
         } else if (localProducts.length > 0) {
           setProducts(
-            localProducts.map((lp) => ({
-              id: lp.id || lp.sku,
-              name: lp.name,
-              sku: lp.sku,
-              category: lp.category,
-              basePrice: Number(lp.stitchedPrice || lp.price),
-              stitchedPrice: Number(lp.stitchedPrice || lp.price),
-              unstitchedPrice: Number(lp.unstitchedPrice || Math.round((lp.stitchedPrice || lp.price) * 0.72)),
-              fabric: lp.fabric,
-              craft: lp.craft,
-              imageUrl: lp.imageUrl,
-              description: lp.description || '',
-              isCustomizable: true,
-              turnaroundDays: '14 - 28 Days',
-            }))
+            localProducts
+              .filter((lp) => lp.isActive !== false)
+              .map((lp) => ({
+                id: lp.id || lp.sku,
+                name: lp.name,
+                sku: lp.sku,
+                category: lp.category,
+                basePrice: Number(lp.stitchedPrice || lp.price),
+                stitchedPrice: Number(lp.stitchedPrice || lp.price),
+                unstitchedPrice: Number(lp.unstitchedPrice || Math.round((lp.stitchedPrice || lp.price) * 0.72)),
+                fabric: lp.fabric,
+                craft: lp.craft,
+                imageUrl: lp.imageUrl,
+                description: lp.description || '',
+                isCustomizable: true,
+                turnaroundDays: '14 - 28 Days',
+              }))
           );
         } else {
           setProducts([]);
