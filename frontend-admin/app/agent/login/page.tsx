@@ -91,27 +91,13 @@ export default function AgentLoginPage() {
               />
             </div>
 
-            <div className="p-3 rounded-xl bg-[#051712] border border-[#38BDF8]/30 text-[11px] text-gray-300 space-y-1">
-              <span className="text-[#38BDF8] font-bold block uppercase tracking-wider font-mono text-[10px]">
-                Authorized Concierge Credentials:
-              </span>
-              <div className="flex justify-between font-mono text-[11px]">
-                <span>Username:</span>
-                <strong className="text-white">agent</strong>
-              </div>
-              <div className="flex justify-between font-mono text-[11px]">
-                <span>Password:</span>
-                <strong className="text-white">AgentPass2026!</strong>
-              </div>
-            </div>
-
             <div className="pt-2 space-y-2">
               <button
                 type="submit"
                 disabled={loading}
                 className="w-full py-3.5 bg-gradient-to-r from-[#38BDF8] to-[#0284C7] text-white font-black rounded-xl text-xs uppercase tracking-widest transition-all cursor-pointer shadow-lg shadow-[#38BDF8]/20 hover:brightness-110"
               >
-                {loading ? 'Authenticating...' : 'Sign In as VIP Concierge'}
+                {loading ? 'Authenticating...' : 'Sign In to Concierge Portal'}
               </button>
             </div>
           </form>

@@ -52,6 +52,7 @@ import {
   fetchOrdersFromSupabase,
   fetchCustomRequestsFromSupabase,
 } from '../../lib/supabase';
+import { getBrandSettings, saveBrandSettings, BrandSettings, DEFAULT_BRAND_SETTINGS } from '../../lib/brand-settings';
 
 // Client-side image compressor & processor: scales local device photos/camera captures to max 1200px width/height Base64 JPEG (~150-250KB)
 const processImageFile = (file: File): Promise<string> => {
@@ -442,18 +443,12 @@ export default function AdminControlCenterPage() {
     { id: 'cr-4', name: 'Silk Ribbon Appliqué', category: 'APPLIQUE', estDays: 14, isActive: true },
   ]);
 
-  // Brand Settings State
-  const [brandConfig, setBrandConfig] = useState({
-    officialName: 'KHADIJA-TUL-QUBRAH BY Meer&Mus',
-    primaryDisplay: 'KHADIJA-TUL-QUBRAH',
-    secondarySignature: 'BY Meer&Mus',
-    primaryColor: '#072A20',
-    secondaryColor: '#C5A059',
-    accentColor: '#FCFBF7',
-    supportEmail: 'concierge@meermus.luxury',
-    supportPhone: '+92 42 35789012',
-    whatsappNumber: '+92 300 8472910',
-  });
+  // Brand & Social Media Settings State
+  const [brandConfig, setBrandConfig] = useState<BrandSettings>(DEFAULT_BRAND_SETTINGS);
+
+  useEffect(() => {
+    setBrandConfig(getBrandSettings());
+  }, []);
 
   // User Roster with RBAC
   const [users, setUsers] = useState([
@@ -1590,15 +1585,41 @@ export default function AdminControlCenterPage() {
                   value={brandConfig.officialName}
                   onChange={(e) => setBrandConfig({ ...brandConfig, officialName: e.target.value })}
                   className="w-full p-2.5 rounded bg-black/40 border border-[#C5A059]/30 text-white text-sm"
+                  placeholder="KHADIJAH-TUL-QUBRAH BY Meer&Mus"
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-400 block mb-1">Primary Display</label>
+                <label className="text-xs text-gray-400 block mb-1">Brand Tagline</label>
                 <input
                   type="text"
-                  value={brandConfig.primaryDisplay}
-                  onChange={(e) => setBrandConfig({ ...brandConfig, primaryDisplay: e.target.value })}
+                  value={brandConfig.tagline}
+                  onChange={(e) => setBrandConfig({ ...brandConfig, tagline: e.target.value })}
                   className="w-full p-2.5 rounded bg-black/40 border border-[#C5A059]/30 text-white text-sm"
+                  placeholder="STAY HONEST , STAND LONG"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-[#C5A059] block mb-1 font-semibold flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  WhatsApp Concierge Hotline (Direct Orders & Inquiries)
+                </label>
+                <input
+                  type="text"
+                  value={brandConfig.whatsappNumber}
+                  onChange={(e) => setBrandConfig({ ...brandConfig, whatsappNumber: e.target.value })}
+                  className="w-full p-2.5 rounded bg-emerald-950/30 border border-emerald-500/40 text-emerald-200 text-sm font-mono placeholder-emerald-600"
+                  placeholder="+923001234567"
+                />
+                <p className="text-[11px] text-gray-400 mt-1">Include country code (e.g. +92). This powers the floating WhatsApp button and one-click chat on all product pages.</p>
+              </div>
+              <div>
+                <label className="text-xs text-gray-400 block mb-1">Support Concierge Phone</label>
+                <input
+                  type="text"
+                  value={brandConfig.supportPhone}
+                  onChange={(e) => setBrandConfig({ ...brandConfig, supportPhone: e.target.value })}
+                  className="w-full p-2.5 rounded bg-black/40 border border-[#C5A059]/30 text-white text-sm"
+                  placeholder="+92 300 0000000"
                 />
               </div>
               <div>
@@ -1608,26 +1629,87 @@ export default function AdminControlCenterPage() {
                   value={brandConfig.supportEmail}
                   onChange={(e) => setBrandConfig({ ...brandConfig, supportEmail: e.target.value })}
                   className="w-full p-2.5 rounded bg-black/40 border border-[#C5A059]/30 text-white text-sm"
+                  placeholder="info@khadijatulqubrah.com"
                 />
               </div>
               <div>
-                <label className="text-xs text-gray-400 block mb-1">WhatsApp Concierge Hotline</label>
+                <label className="text-xs text-gray-400 block mb-1">Physical Boutique / Atelier Address</label>
                 <input
                   type="text"
-                  value={brandConfig.whatsappNumber}
-                  onChange={(e) => setBrandConfig({ ...brandConfig, whatsappNumber: e.target.value })}
+                  value={brandConfig.storeAddress}
+                  onChange={(e) => setBrandConfig({ ...brandConfig, storeAddress: e.target.value })}
                   className="w-full p-2.5 rounded bg-black/40 border border-[#C5A059]/30 text-white text-sm"
+                  placeholder="Main Boutique & Workshop, Jampur"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-400 block mb-1">City / Region</label>
+                <input
+                  type="text"
+                  value={brandConfig.storeCity}
+                  onChange={(e) => setBrandConfig({ ...brandConfig, storeCity: e.target.value })}
+                  className="w-full p-2.5 rounded bg-black/40 border border-[#C5A059]/30 text-white text-sm"
+                  placeholder="Jampur, Punjab, Pakistan"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-400 block mb-1">Instagram Profile URL</label>
+                <input
+                  type="url"
+                  value={brandConfig.instagramUrl}
+                  onChange={(e) => setBrandConfig({ ...brandConfig, instagramUrl: e.target.value })}
+                  className="w-full p-2.5 rounded bg-black/40 border border-[#C5A059]/30 text-white text-sm"
+                  placeholder="https://instagram.com/khadijatulqubrah_official"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-400 block mb-1">Facebook Page URL</label>
+                <input
+                  type="url"
+                  value={brandConfig.facebookUrl}
+                  onChange={(e) => setBrandConfig({ ...brandConfig, facebookUrl: e.target.value })}
+                  className="w-full p-2.5 rounded bg-black/40 border border-[#C5A059]/30 text-white text-sm"
+                  placeholder="https://facebook.com/khadijatulqubrah"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-400 block mb-1">TikTok Account URL</label>
+                <input
+                  type="url"
+                  value={brandConfig.tiktokUrl}
+                  onChange={(e) => setBrandConfig({ ...brandConfig, tiktokUrl: e.target.value })}
+                  className="w-full p-2.5 rounded bg-black/40 border border-[#C5A059]/30 text-white text-sm"
+                  placeholder="https://tiktok.com/@khadijatulqubrah"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-400 block mb-1">YouTube Channel URL</label>
+                <input
+                  type="url"
+                  value={brandConfig.youtubeUrl}
+                  onChange={(e) => setBrandConfig({ ...brandConfig, youtubeUrl: e.target.value })}
+                  className="w-full p-2.5 rounded bg-black/40 border border-[#C5A059]/30 text-white text-sm"
+                  placeholder="https://youtube.com/@khadijatulqubrah"
                 />
               </div>
             </div>
+
+            <div className="mt-4 p-3 rounded bg-emerald-950/20 border border-emerald-600/30 flex items-start gap-2.5 text-xs text-emerald-200">
+              <Sparkles className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <span className="font-semibold text-white">Two-Way Social Integration Active:</span> Visitors to your website can open your Instagram, Facebook, TikTok, and WhatsApp with 1-click. Share your website link on your social profiles to route traffic directly to this digital atelier.
+              </div>
+            </div>
+
             <button
               onClick={() => {
-                setActionSuccessMessage('Brand configuration updated and recorded to audit trail.');
+                saveBrandSettings(brandConfig);
+                setActionSuccessMessage('Brand configuration & WhatsApp hotline saved and synchronized across all storefront pages!');
                 setTimeout(() => setActionSuccessMessage(null), 4000);
               }}
-              className="mt-4 px-4 py-2 bg-[#C5A059] text-[#072A20] rounded-lg text-xs font-semibold hover:bg-[#d4af37]"
+              className="mt-4 px-5 py-2.5 bg-[#C5A059] text-[#072A20] rounded-lg text-xs font-semibold hover:bg-[#d4af37] transition flex items-center gap-2"
             >
-              Save Brand Configuration
+              <CheckCircle2 className="w-4 h-4" /> Save Brand & Social Configuration
             </button>
           </div>
 

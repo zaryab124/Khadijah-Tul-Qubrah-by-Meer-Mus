@@ -24,6 +24,7 @@ import {
 import { Logo } from './Logo';
 import { BranchSelectorModal, AtelierBranch, ATELIER_BRANCHES } from './BranchSelectorModal';
 import { useAuth } from '../lib/auth-context';
+import { getBrandSettings, BrandSettings, DEFAULT_BRAND_SETTINGS } from '../lib/brand-settings';
 
 interface Props {
   activeBranch?: AtelierBranch;
@@ -44,6 +45,24 @@ export const Navbar: React.FC<Props> = ({
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
+
+  const [brandSettings, setBrandSettings] = useState<BrandSettings>(DEFAULT_BRAND_SETTINGS);
+
+  React.useEffect(() => {
+    setBrandSettings(getBrandSettings());
+    const handleUpdate = (e: any) => {
+      if (e.detail) {
+        setBrandSettings(e.detail);
+      } else {
+        setBrandSettings(getBrandSettings());
+      }
+    };
+    window.addEventListener('khadijah_brand_settings_updated', handleUpdate);
+    return () => window.removeEventListener('khadijah_brand_settings_updated', handleUpdate);
+  }, []);
+
+  const cleanWa = brandSettings.whatsappNumber.replace(/[^0-9]/g, '');
+  const waLink = `https://wa.me/${cleanWa || '923000000000'}?text=${encodeURIComponent('Hello KHADIJAH-TUL-QUBRAH By Meer&Mus, I am interested in inquiring about your haute couture and bespoke designs.')}`;
 
   return (
     <>
@@ -98,6 +117,15 @@ export const Navbar: React.FC<Props> = ({
                 <Link href="/order-tracking/ORD-2026-KTQ" className="hover:text-[#C5A059] transition-colors py-1 flex items-center gap-1">
                   <Truck className="w-3.5 h-3.5 text-[#C5A059]" /> Track Order
                 </Link>
+                <a
+                  href={waLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:text-emerald-300 text-emerald-400 font-bold transition-colors py-1 flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-950/40 border border-emerald-500/30"
+                  title={`Chat with Atelier on WhatsApp: ${brandSettings.whatsappNumber}`}
+                >
+                  <Phone className="w-3 h-3 text-emerald-400 fill-emerald-400" /> WhatsApp
+                </a>
               </nav>
             </div>
 
@@ -349,15 +377,20 @@ export const Navbar: React.FC<Props> = ({
             </div>
 
             {/* Bottom Support */}
-            <div className="pt-6 border-t border-[#C5A059]/20">
+            <div className="pt-6 border-t border-[#C5A059]/20 space-y-2">
               <a
-                href="https://wa.me/923000000000"
+                href={waLink}
                 target="_blank"
                 rel="noreferrer"
                 className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow"
               >
-                <Phone className="w-4 h-4" /> Chat on WhatsApp
+                <Phone className="w-4 h-4" /> Chat on WhatsApp ({brandSettings.whatsappNumber})
               </a>
+              {brandSettings.storeAddress && (
+                <p className="text-[10px] text-gray-400 text-center font-mono">
+                  {brandSettings.storeAddress}, {brandSettings.storeCity}
+                </p>
+              )}
             </div>
           </div>
         </div>

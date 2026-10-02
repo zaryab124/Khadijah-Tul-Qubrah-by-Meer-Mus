@@ -91,27 +91,13 @@ export default function ProductionLoginPage() {
               />
             </div>
 
-            <div className="p-3 rounded-xl bg-[#051712] border border-[#10B981]/30 text-[11px] text-gray-300 space-y-1">
-              <span className="text-[#10B981] font-bold block uppercase tracking-wider font-mono text-[10px]">
-                Authorized Production Credentials:
-              </span>
-              <div className="flex justify-between font-mono text-[11px]">
-                <span>Username:</span>
-                <strong className="text-white">production</strong>
-              </div>
-              <div className="flex justify-between font-mono text-[11px]">
-                <span>Password:</span>
-                <strong className="text-white">ProductionPass2026!</strong>
-              </div>
-            </div>
-
             <div className="pt-2 space-y-2">
               <button
                 type="submit"
                 disabled={loading}
                 className="w-full py-3.5 bg-gradient-to-r from-[#10B981] to-[#34D399] text-[#051712] font-black rounded-xl text-xs uppercase tracking-widest transition-all cursor-pointer shadow-lg shadow-[#10B981]/20 hover:brightness-110"
               >
-                {loading ? 'Authenticating...' : 'Sign In as Workshop Master'}
+                {loading ? 'Authenticating...' : 'Sign In to Production Floor'}
               </button>
             </div>
           </form>

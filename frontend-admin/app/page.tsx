@@ -35,6 +35,12 @@ import {
   MapPin,
   Check,
   PackageCheck,
+  Phone,
+  MessageCircle,
+  Instagram,
+  Facebook,
+  Youtube,
+  Share2,
 } from 'lucide-react';
 import { useAuth, DEMO_ACCOUNTS, UserRole } from '../lib/auth-context';
 import { Navbar } from '../components/Navbar';
@@ -44,6 +50,7 @@ import { BespokeStudioModal } from '../components/BespokeStudioModal';
 import { BranchSelectorModal, AtelierBranch, ATELIER_BRANCHES } from '../components/BranchSelectorModal';
 import { Logo } from '../components/Logo';
 import { fetchProductsFromSupabase, submitCustomRequestToSupabase } from '../lib/supabase';
+import { getBrandSettings, BrandSettings, DEFAULT_BRAND_SETTINGS } from '../lib/brand-settings';
 
 // Product Interface with Stitched vs Unstitched Pricing
 interface Product {
@@ -138,69 +145,39 @@ export default function HauteCoutureApp() {
   const [showSizeChart, setShowSizeChart] = useState<boolean>(false);
   const [selectedVideoDeal, setSelectedVideoDeal] = useState<VideoDeal | null>(null);
 
-  // Products Catalog (with Stitched & Unstitched Pricing Criteria)
-  const [products, setProducts] = useState<Product[]>([
-    {
-      id: 'p-1',
-      name: 'The Emerald Zardozi Peshwas',
-      sku: 'KTQ-PESH-001',
-      category: 'Bridal Couture',
-      basePrice: 485000,
-      stitchedPrice: 485000,
-      unstitchedPrice: 345000,
-      fabric: 'Micro Velvet 9000 & Loomed Silk',
-      craft: '24k Metallic Tilla & Antique Zardozi',
-      imageUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80',
-      description: 'Sculpted from imperial Micro Velvet 9000 in jewel-toned emerald. Hand-embellished by master karigars with gold needlework, dabka, and antique zardozi. Paired with pure silk organza dupatta.',
-      isCustomizable: true,
-      turnaroundDays: '14 - 28 Days',
-    },
-    {
-      id: 'p-2',
-      name: 'Bespoke Tilla Silk Anarkali',
-      sku: 'KTQ-ANAR-002',
-      category: 'Haute Couture',
-      basePrice: 340000,
-      stitchedPrice: 340000,
-      unstitchedPrice: 240000,
-      fabric: 'Pure Katan Silk (32 Kalis)',
-      craft: 'Marori Threadwork & Dabka Cuffs',
-      imageUrl: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1200&q=80',
-      description: 'Flowing pure Katan silk silhouette with 32 hand-pleated kalis. Bodice embellished with floral Mughal jaal and finished with scalloped border embroidery.',
-      isCustomizable: true,
-      turnaroundDays: '14 - 21 Days',
-    },
-    {
-      id: 'p-3',
-      name: 'Marori Raw Silk Lehenga Set',
-      sku: 'KTQ-LEH-003',
-      category: 'Bridal Couture',
-      basePrice: 620000,
-      stitchedPrice: 620000,
-      unstitchedPrice: 440000,
-      fabric: '80g Hand-Loomed Raw Silk',
-      craft: 'Heavy Cutwork & Kora Dabka Zardozi',
-      imageUrl: 'https://images.unsplash.com/photo-1594223274512-ad4803739b7c?auto=format&fit=crop&w=1200&q=80',
-      description: 'Regal bridal lehenga set crafted on hand-loomed 80g raw silk. Adorned with geometric Mughal motifs executed in heavy cutwork and French knots.',
-      isCustomizable: true,
-      turnaroundDays: '21 - 35 Days',
-    },
-    {
-      id: 'p-4',
-      name: 'Handcrafted Tissue Organza Dupatta & Kurta',
-      sku: 'KTQ-DUP-004',
-      category: 'Luxury Pret',
-      basePrice: 115000,
-      stitchedPrice: 115000,
-      unstitchedPrice: 75000,
-      fabric: 'French Pure Silk Organza',
-      craft: 'Silk Ribbon Appliqué & Gota Spray',
-      imageUrl: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1200&q=80',
-      description: 'Featherlight sheer French silk organza shirt and dupatta featuring hand-appliqued tissue borders, scalloped edging, and dispersed gota spray.',
-      isCustomizable: false,
-      turnaroundDays: '7 - 14 Days',
-    },
-  ]);
+  // Products Catalog (Live real data only, populated via Admin Center / Supabase)
+  const [products, setProducts] = useState<Product[]>([]);
+
+  // Brand & Social Media Configuration (Dynamic from Admin Center)
+  const [brandSettings, setBrandSettings] = useState<BrandSettings>(DEFAULT_BRAND_SETTINGS);
+
+  useEffect(() => {
+    setBrandSettings(getBrandSettings());
+    const handleBrandUpdate = (e: any) => {
+      if (e.detail) {
+        setBrandSettings(e.detail);
+      } else {
+        setBrandSettings(getBrandSettings());
+      }
+    };
+    window.addEventListener('khadijah_brand_settings_updated', handleBrandUpdate);
+    return () => window.removeEventListener('khadijah_brand_settings_updated', handleBrandUpdate);
+  }, []);
+
+  const cleanWa = brandSettings.whatsappNumber.replace(/[^0-9]/g, '');
+  const waLink = `https://wa.me/${cleanWa || '923000000000'}?text=${encodeURIComponent('Hello KHADIJAH-TUL-QUBRAH By Meer&Mus, I am interested in inquiring about your haute couture and bespoke designs.')}`;
+
+  // Video Deals & Campaigns (Real base only, defaults to empty)
+  const [videoDeals, setVideoDeals] = useState<VideoDeal[]>([]);
+
+  // Bespoke Custom Design Commissions (Clean live state, populated by actual customer submissions)
+  const [commissions, setCommissions] = useState<CustomCommission[]>([]);
+
+  // Selected Handcraft Showcase Item for Magnified Inspection
+  const [selectedHandcraftModal, setSelectedHandcraftModal] = useState<any | null>(null);
+
+  // Master Handcrafted Designs Showcase (Pure Needlework & Artisan Embroidery, loaded dynamically)
+  const [handcraftItems, setHandcraftItems] = useState<any[]>([]);
 
   // Connect & Fetch Live Catalog from Supabase & Admin Local Storage with Real-Time Event Sync
   useEffect(() => {
@@ -256,30 +233,50 @@ export default function HauteCoutureApp() {
             }));
 
           setProducts([...localFormatted, ...formattedRemote]);
-          return;
+        } else if (localProducts.length > 0) {
+          setProducts(
+            localProducts.map((lp) => ({
+              id: lp.id || lp.sku,
+              name: lp.name,
+              sku: lp.sku,
+              category: lp.category,
+              basePrice: Number(lp.stitchedPrice || lp.price),
+              stitchedPrice: Number(lp.stitchedPrice || lp.price),
+              unstitchedPrice: Number(lp.unstitchedPrice || Math.round((lp.stitchedPrice || lp.price) * 0.72)),
+              fabric: lp.fabric,
+              craft: lp.craft,
+              imageUrl: lp.imageUrl,
+              description: lp.description || '',
+              isCustomizable: true,
+              turnaroundDays: '14 - 28 Days',
+            }))
+          );
+        } else {
+          setProducts([]);
         }
       } catch (err) {
-        console.warn('Supabase storefront fetch (falling back to local/default):', err);
-      }
-
-      if (localProducts.length > 0) {
-        setProducts(
-          localProducts.map((lp) => ({
-            id: lp.id || lp.sku,
-            name: lp.name,
-            sku: lp.sku,
-            category: lp.category,
-            basePrice: Number(lp.stitchedPrice || lp.price),
-            stitchedPrice: Number(lp.stitchedPrice || lp.price),
-            unstitchedPrice: Number(lp.unstitchedPrice || Math.round((lp.stitchedPrice || lp.price) * 0.72)),
-            fabric: lp.fabric,
-            craft: lp.craft,
-            imageUrl: lp.imageUrl,
-            description: lp.description || '',
-            isCustomizable: true,
-            turnaroundDays: '14 - 28 Days',
-          }))
-        );
+        console.warn('Supabase storefront fetch (falling back to local):', err);
+        if (localProducts.length > 0) {
+          setProducts(
+            localProducts.map((lp) => ({
+              id: lp.id || lp.sku,
+              name: lp.name,
+              sku: lp.sku,
+              category: lp.category,
+              basePrice: Number(lp.stitchedPrice || lp.price),
+              stitchedPrice: Number(lp.stitchedPrice || lp.price),
+              unstitchedPrice: Number(lp.unstitchedPrice || Math.round((lp.stitchedPrice || lp.price) * 0.72)),
+              fabric: lp.fabric,
+              craft: lp.craft,
+              imageUrl: lp.imageUrl,
+              description: lp.description || '',
+              isCustomizable: true,
+              turnaroundDays: '14 - 28 Days',
+            }))
+          );
+        } else {
+          setProducts([]);
+        }
       }
 
       // 2. Read real custom commissions submitted by clients (No dummy data)
@@ -293,6 +290,32 @@ export default function HauteCoutureApp() {
         }
       } catch (e) {
         console.warn('Error reading stored commissions:', e);
+      }
+
+      // 3. Read video deals if configured by boutique admin
+      try {
+        const storedDeals = localStorage.getItem('khadijah_video_deals');
+        if (storedDeals) {
+          const parsedDeals = JSON.parse(storedDeals);
+          if (Array.isArray(parsedDeals)) {
+            setVideoDeals(parsedDeals);
+          }
+        }
+      } catch (e) {
+        console.warn('Error reading video deals:', e);
+      }
+
+      // 4. Read handcrafted showcase items if saved
+      try {
+        const storedShowcase = localStorage.getItem('khadijah_handcraft_showcase');
+        if (storedShowcase) {
+          const parsedShowcase = JSON.parse(storedShowcase);
+          if (Array.isArray(parsedShowcase)) {
+            setHandcraftItems(parsedShowcase);
+          }
+        }
+      } catch (e) {
+        console.warn('Error reading handcraft showcase:', e);
       }
     }
 
@@ -311,76 +334,6 @@ export default function HauteCoutureApp() {
       window.removeEventListener('storage', handleCatalogSync);
     };
   }, []);
-
-  // Video Deals & Campaigns
-  const [videoDeals, setVideoDeals] = useState<VideoDeal[]>([
-    {
-      id: 'vd-1',
-      title: 'Royal Heirloom Winter Collection',
-      tagline: 'Exclusive Velvet & 24k Zardozi Edition',
-      promoCode: 'SUMMER26',
-      discountPercent: 20,
-      videoPoster: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80',
-      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-fashion-model-in-an-orange-dress-41584-large.mp4',
-      expiresIn: 'Ends in 3 days',
-    },
-    {
-      id: 'vd-2',
-      title: 'Bespoke Bridal Atelier Preview',
-      tagline: 'Behind the Scenes with Master Karigars',
-      promoCode: 'BRIDALVIP',
-      discountPercent: 15,
-      videoPoster: 'https://images.unsplash.com/photo-1594223274512-ad4803739b7c?auto=format&fit=crop&w=1200&q=80',
-      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-glamorous-woman-in-a-golden-dress-42503-large.mp4',
-      expiresIn: 'Limited Slots',
-    },
-  ]);
-
-  // Bespoke Custom Design Commissions (Clean live state, populated by actual customer submissions)
-  const [commissions, setCommissions] = useState<CustomCommission[]>([]);
-
-  // Selected Handcraft Showcase Item for Magnified Inspection
-  const [selectedHandcraftModal, setSelectedHandcraftModal] = useState<any | null>(null);
-
-  // Master Handcrafted Designs Showcase (Pure Needlework & Artisan Embroidery)
-  const handcraftShowcaseItems = [
-    {
-      id: 'hc-1',
-      title: 'The Imperial Antique Zardozi Peshwas',
-      craftBadge: '24k Metallic Tilla & Antique Zardozi',
-      fabric: 'Micro Velvet 9000 & Loomed Silk',
-      karigarHours: '160',
-      imageUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80',
-      techniqueDescription: 'Centuries-old zardozi needlework executed with gold metallic tilla, heavy French knots, and dabka floral borders on deep royal emerald velvet.',
-    },
-    {
-      id: 'hc-2',
-      title: 'Mughal Marori Pure Katan Silk Anarkali',
-      craftBadge: 'Marori Threadwork & Dabka Cuffs',
-      fabric: 'Pure Katan Silk (32 Kalis)',
-      karigarHours: '120',
-      imageUrl: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?auto=format&fit=crop&w=1200&q=80',
-      techniqueDescription: '32 hand-pleated silk kalis featuring delicate floral Mughal jaal with marori twisting embroidery and antique dabka accents.',
-    },
-    {
-      id: 'hc-3',
-      title: 'Regal Kora Dabka Bridal Lehenga Set',
-      craftBadge: 'Heavy Cutwork & Kora Dabka Zardozi',
-      fabric: '80g Hand-Loomed Raw Silk',
-      karigarHours: '220',
-      imageUrl: 'https://images.unsplash.com/photo-1594223274512-ad4803739b7c?auto=format&fit=crop&w=1200&q=80',
-      techniqueDescription: 'Regal bridal skirt adorned with geometric Mughal archways, 3D wirework cutwork, and hand-beaded gota patti embellishments.',
-    },
-    {
-      id: 'hc-4',
-      title: 'Featherlight Organza Silk Kurta & Dupatta',
-      craftBadge: 'Resham Jaal & Seed Pearls',
-      fabric: 'French Pure Silk Organza',
-      karigarHours: '85',
-      imageUrl: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=1200&q=80',
-      techniqueDescription: 'Ultra-fine sheer French organza embellished with hand-appliquéd tissue borders, resham threadwork, and freshwater seed pearls.',
-    },
-  ];
 
   // "Create Your Own" Studio Form State
   const [customForm, setCustomForm] = useState({
@@ -718,33 +671,61 @@ export default function HauteCoutureApp() {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3.5">
-                    {videoDeals.map((deal) => (
-                      <div
-                        key={deal.id}
-                        onClick={() => setSelectedVideoDeal(deal)}
-                        className="relative rounded-2xl overflow-hidden border border-[#C5A059]/50 bg-[#030e0b] group shadow-xl h-40 flex flex-col justify-end p-4 cursor-pointer hover:border-[#F3E5AB] transition-all"
-                      >
+                  {videoDeals.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3.5">
+                      {videoDeals.map((deal) => (
                         <div
-                          className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                          style={{ backgroundImage: `url(${deal.videoPoster})` }}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#020b08] via-[#020b08]/65 to-transparent" />
+                          key={deal.id}
+                          onClick={() => setSelectedVideoDeal(deal)}
+                          className="relative rounded-2xl overflow-hidden border border-[#C5A059]/50 bg-[#030e0b] group shadow-xl h-40 flex flex-col justify-end p-4 cursor-pointer hover:border-[#F3E5AB] transition-all"
+                        >
+                          <div
+                            className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                            style={{ backgroundImage: `url(${deal.videoPoster})` }}
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#020b08] via-[#020b08]/65 to-transparent" />
 
-                        <div className="absolute top-3 right-3 bg-[#030e0b]/80 backdrop-blur-md p-2.5 rounded-full border border-[#C5A059] group-hover:bg-[#C5A059] group-hover:text-[#051712] transition-colors shadow-lg">
-                          <Play className="w-4 h-4 text-[#C5A059] group-hover:text-[#051712] fill-current" />
-                        </div>
-
-                        <div className="relative z-10 space-y-1">
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#C5A059] text-[#051712] text-[10px] font-black font-mono shadow">
-                            <Percent className="w-2.5 h-2.5" /> {deal.discountPercent}% OFF • {deal.promoCode}
+                          <div className="absolute top-3 right-3 bg-[#030e0b]/80 backdrop-blur-md p-2.5 rounded-full border border-[#C5A059] group-hover:bg-[#C5A059] group-hover:text-[#051712] transition-colors shadow-lg">
+                            <Play className="w-4 h-4 text-[#C5A059] group-hover:text-[#051712] fill-current" />
                           </div>
-                          <h4 className="text-base font-serif font-bold text-white line-clamp-1">{deal.title}</h4>
-                          <p className="text-[11px] text-gray-300 line-clamp-1 font-light">{deal.tagline}</p>
+
+                          <div className="relative z-10 space-y-1">
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#C5A059] text-[#051712] text-[10px] font-black font-mono shadow">
+                              <Percent className="w-2.5 h-2.5" /> {deal.discountPercent}% OFF • {deal.promoCode}
+                            </div>
+                            <h4 className="text-base font-serif font-bold text-white line-clamp-1">{deal.title}</h4>
+                            <p className="text-[11px] text-gray-300 line-clamp-1 font-light">{deal.tagline}</p>
+                          </div>
                         </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-5 rounded-2xl border border-[#C5A059]/40 bg-[#030e0b]/90 backdrop-blur-md space-y-3.5 shadow-xl">
+                      <div className="flex items-center gap-2 text-xs font-serif font-bold text-[#C5A059] uppercase tracking-wider">
+                        <Sparkles className="w-4 h-4 text-[#C5A059]" />
+                        <span>Runway &amp; Video Campaigns</span>
                       </div>
-                    ))}
-                  </div>
+                      <p className="text-xs text-gray-300 leading-relaxed font-light">
+                        Exclusive video showcases and master artisan demonstrations are scheduled directly by our atelier. Connect directly with our concierge for private VIP appointments.
+                      </p>
+                      <div className="pt-2 border-t border-[#C5A059]/20 flex flex-col sm:flex-row items-center gap-2">
+                        <a
+                          href={waLink}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow transition"
+                        >
+                          <Phone className="w-3.5 h-3.5" /> WhatsApp Concierge
+                        </a>
+                        <Link
+                          href="/login"
+                          className="w-full sm:w-auto px-3.5 py-2.5 rounded-xl bg-[#051712] border border-[#C5A059]/30 text-gray-400 hover:text-white text-xs flex items-center justify-center gap-1.5"
+                        >
+                          <Crown className="w-3.5 h-3.5 text-[#C5A059]" /> Staff Management
+                        </Link>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -791,81 +772,111 @@ export default function HauteCoutureApp() {
               </div>
 
               {/* Showcase Cards Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                {handcraftShowcaseItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="group relative rounded-2xl overflow-hidden border border-[#C5A059]/40 bg-[#051712]/90 hover:border-[#C5A059] transition-all duration-300 shadow-xl flex flex-col justify-between"
-                  >
-                    {/* Handcraft Photo with Magnify / Zoom Effect */}
+              {handcraftItems.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                  {handcraftItems.map((item) => (
                     <div
-                      className="relative aspect-[4/5] overflow-hidden bg-black cursor-pointer"
-                      onClick={() => setSelectedHandcraftModal(item)}
+                      key={item.id}
+                      className="group relative rounded-2xl overflow-hidden border border-[#C5A059]/40 bg-[#051712]/90 hover:border-[#C5A059] transition-all duration-300 shadow-xl flex flex-col justify-between"
                     >
-                      <img
-                        src={item.imageUrl}
-                        alt={item.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#020b08] via-transparent to-black/30" />
+                      {/* Handcraft Photo with Magnify / Zoom Effect */}
+                      <div
+                        className="relative aspect-[4/5] overflow-hidden bg-black cursor-pointer"
+                        onClick={() => setSelectedHandcraftModal(item)}
+                      >
+                        <img
+                          src={item.imageUrl}
+                          alt={item.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#020b08] via-transparent to-black/30" />
 
-                      {/* Craft Badge */}
-                      <div className="absolute top-3 left-3 bg-[#051712]/90 backdrop-blur-md px-2.5 py-1 rounded-full border border-[#C5A059]/60 text-[9px] font-bold text-[#C5A059] tracking-wider uppercase">
-                        {item.craftBadge}
-                      </div>
+                        {/* Craft Badge */}
+                        <div className="absolute top-3 left-3 bg-[#051712]/90 backdrop-blur-md px-2.5 py-1 rounded-full border border-[#C5A059]/60 text-[9px] font-bold text-[#C5A059] tracking-wider uppercase">
+                          {item.craftBadge}
+                        </div>
 
-                      {/* Karigar Hours Badge */}
-                      <div className="absolute bottom-3 left-3 bg-[#072A20]/90 backdrop-blur-md px-2 py-0.5 rounded-md border border-[#C5A059]/40 text-[10px] font-mono text-gray-200">
-                        {item.karigarHours} Karigar Hours
-                      </div>
+                        {/* Karigar Hours Badge */}
+                        <div className="absolute bottom-3 left-3 bg-[#072A20]/90 backdrop-blur-md px-2 py-0.5 rounded-md border border-[#C5A059]/40 text-[10px] font-mono text-gray-200">
+                          {item.karigarHours || '100+'} Karigar Hours
+                        </div>
 
-                      {/* Zoom Indicator */}
-                      <div className="absolute bottom-3 right-3 p-2 rounded-full bg-[#051712]/80 border border-[#C5A059]/40 text-[#C5A059] group-hover:bg-[#C5A059] group-hover:text-[#051712] transition-colors shadow">
-                        <Eye className="w-3.5 h-3.5" />
-                      </div>
-                    </div>
-
-                    {/* Details */}
-                    <div className="p-4 space-y-2.5 flex-1 flex flex-col justify-between">
-                      <div>
-                        <span className="text-[10px] text-gray-400 font-mono block mb-1">{item.fabric}</span>
-                        <h4 className="text-sm font-serif font-bold text-white group-hover:text-[#C5A059] transition-colors leading-snug">
-                          {item.title}
-                        </h4>
-                        <p className="text-[11px] text-gray-300 mt-1 line-clamp-2 leading-relaxed font-light">
-                          {item.techniqueDescription}
-                        </p>
-                      </div>
-
-                      <div className="pt-2 border-t border-[#C5A059]/20 flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCustomForm((prev) => ({
-                              ...prev,
-                              craft: item.craftBadge,
-                              fabric: item.fabric.split('&')[0].trim(),
-                            }));
-                            const el = document.getElementById('bespoke-studio');
-                            el?.scrollIntoView({ behavior: 'smooth' });
-                          }}
-                          className="flex-1 py-2 rounded-lg bg-[#072A20] hover:bg-[#C5A059] text-[#C5A059] hover:text-[#051712] border border-[#C5A059]/40 hover:border-[#C5A059] font-serif font-bold text-[11px] tracking-wider transition-all flex items-center justify-center gap-1.5 shadow"
-                        >
-                          <Sparkles className="w-3 h-3" /> Select for Bespoke
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setSelectedHandcraftModal(item)}
-                          className="p-2 rounded-lg border border-[#C5A059]/40 text-[#C5A059] hover:bg-[#072A20]"
-                          title="Inspect Needlework Detail"
-                        >
+                        {/* Zoom Indicator */}
+                        <div className="absolute bottom-3 right-3 p-2 rounded-full bg-[#051712]/80 border border-[#C5A059]/40 text-[#C5A059] group-hover:bg-[#C5A059] group-hover:text-[#051712] transition-colors shadow">
                           <Eye className="w-3.5 h-3.5" />
-                        </button>
+                        </div>
+                      </div>
+
+                      {/* Details */}
+                      <div className="p-4 space-y-2.5 flex-1 flex flex-col justify-between">
+                        <div>
+                          <span className="text-[10px] text-gray-400 font-mono block mb-1">{item.fabric}</span>
+                          <h4 className="text-sm font-serif font-bold text-white group-hover:text-[#C5A059] transition-colors leading-snug">
+                            {item.title}
+                          </h4>
+                          <p className="text-[11px] text-gray-300 mt-1 line-clamp-2 leading-relaxed font-light">
+                            {item.techniqueDescription}
+                          </p>
+                        </div>
+
+                        <div className="pt-2 border-t border-[#C5A059]/20 flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCustomForm((prev) => ({
+                                ...prev,
+                                craft: item.craftBadge,
+                                fabric: item.fabric ? item.fabric.split('&')[0].trim() : 'Micro Velvet 9000',
+                              }));
+                              const el = document.getElementById('bespoke-studio');
+                              el?.scrollIntoView({ behavior: 'smooth' });
+                            }}
+                            className="flex-1 py-2 rounded-lg bg-[#072A20] hover:bg-[#C5A059] text-[#C5A059] hover:text-[#051712] border border-[#C5A059]/40 hover:border-[#C5A059] font-serif font-bold text-[11px] tracking-wider transition-all flex items-center justify-center gap-1.5 shadow"
+                          >
+                            <Sparkles className="w-3 h-3" /> Select for Bespoke
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedHandcraftModal(item)}
+                            className="p-2 rounded-lg border border-[#C5A059]/40 text-[#C5A059] hover:bg-[#072A20]"
+                            title="Inspect Needlework Detail"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                     </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-8 sm:p-12 rounded-2xl border border-[#C5A059]/30 bg-[#051712]/80 text-center space-y-4 max-w-2xl mx-auto shadow-xl">
+                  <div className="w-14 h-14 rounded-full bg-[#C5A059]/15 border border-[#C5A059]/40 flex items-center justify-center mx-auto text-[#C5A059]">
+                    <Scissors className="w-7 h-7 text-[#C5A059]" />
                   </div>
-                ))}
-              </div>
+                  <h3 className="text-xl sm:text-2xl font-serif font-bold text-white">
+                    Master Karigar Showcase in Curation
+                  </h3>
+                  <p className="text-xs sm:text-sm text-gray-300 font-light leading-relaxed">
+                    Our atelier needlework pieces (24k Metallic Tilla, Antique Zardozi, Kora Dabka wirework, and Marori) are being hand-photographed directly from our workshop in Jampur. You can commission any custom handcraft embroidery on your choice of fabric right now.
+                  </p>
+                  <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+                    <button
+                      onClick={() => setIsBespokeModalOpen(true)}
+                      className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#C5A059] to-amber-600 text-[#051712] font-serif font-bold text-xs uppercase tracking-wider hover:brightness-110 shadow-lg transition"
+                    >
+                      Commission Bespoke Handcraft
+                    </button>
+                    <a
+                      href={waLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-5 py-3 rounded-xl bg-[#072A20] border border-emerald-500/40 text-emerald-300 hover:text-white text-xs font-semibold flex items-center gap-2 transition"
+                    >
+                      <Phone className="w-3.5 h-3.5 text-emerald-400" /> Chat with Master Artisan
+                    </a>
+                  </div>
+                </div>
+              )}
             </div>
           </section>
 
@@ -923,84 +934,120 @@ export default function HauteCoutureApp() {
             </div>
 
             {/* Garment Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {filteredProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="rounded-2xl border border-[#C5A059]/30 bg-[#072A20] overflow-hidden flex flex-col justify-between hover:border-[#C5A059] transition-all duration-300 shadow-xl group"
-                >
-                  {/* Image Container */}
-                  <div className="relative h-72 overflow-hidden bg-black cursor-pointer" onClick={() => setSelectedItemForModal(product)}>
-                    <img
-                      src={product.imageUrl}
-                      alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    />
-                    <div className="absolute top-3 left-3 bg-[#051712]/90 backdrop-blur-md px-3 py-1 rounded-full border border-[#C5A059]/50 text-[10px] font-bold text-[#C5A059] tracking-wider uppercase">
-                      {product.category}
-                    </div>
-                    {product.isCustomizable && (
-                      <div className="absolute top-3 right-3 bg-[#C5A059] text-[#051712] px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-widest uppercase flex items-center gap-1 shadow">
-                        <Sparkles className="w-2.5 h-2.5" /> CUSTOM MADE
+            {filteredProducts.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {filteredProducts.map((product) => (
+                  <div
+                    key={product.id}
+                    className="rounded-2xl border border-[#C5A059]/30 bg-[#072A20] overflow-hidden flex flex-col justify-between hover:border-[#C5A059] transition-all duration-300 shadow-xl group"
+                  >
+                    {/* Image Container */}
+                    <div className="relative h-72 overflow-hidden bg-black cursor-pointer" onClick={() => setSelectedItemForModal(product)}>
+                      <img
+                        src={product.imageUrl}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                      />
+                      <div className="absolute top-3 left-3 bg-[#051712]/90 backdrop-blur-md px-3 py-1 rounded-full border border-[#C5A059]/50 text-[10px] font-bold text-[#C5A059] tracking-wider uppercase">
+                        {product.category}
                       </div>
-                    )}
-                  </div>
-
-                  {/* Garment Info */}
-                  <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
-                    <div>
-                      <span className="text-[10px] text-[#C5A059] tracking-widest font-mono uppercase">{product.sku}</span>
-                      <h3 className="text-lg font-serif font-bold text-[#FCFBF7] group-hover:text-[#C5A059] transition-colors leading-snug">
-                        {product.name}
-                      </h3>
-                      <p className="text-xs text-gray-300 line-clamp-2 mt-1 font-light leading-relaxed">
-                        {product.description}
-                      </p>
-                    </div>
-
-                    <div className="pt-2 border-t border-[#C5A059]/20 space-y-2.5">
-                      {/* Dual Price Criteria: Stitched vs Unstitched */}
-                      <div className="grid grid-cols-2 gap-2 bg-[#051712]/80 p-2 rounded-xl border border-[#C5A059]/20">
-                        <div>
-                          <span className="text-[9px] text-amber-400 font-bold uppercase tracking-wider flex items-center gap-1">
-                            <PackageCheck className="w-2.5 h-2.5" /> Unstitched
-                          </span>
-                          <span className="text-xs font-bold text-amber-300 font-mono block">
-                            {formatPKR(product.unstitchedPrice)}
-                          </span>
+                      {product.isCustomizable && (
+                        <div className="absolute top-3 right-3 bg-[#C5A059] text-[#051712] px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-widest uppercase flex items-center gap-1 shadow">
+                          <Sparkles className="w-2.5 h-2.5" /> CUSTOM MADE
                         </div>
-                        <div className="border-l border-[#C5A059]/20 pl-2">
-                          <span className="text-[9px] text-[#C5A059] font-bold uppercase tracking-wider flex items-center gap-1">
-                            <Scissors className="w-2.5 h-2.5" /> Stitched
-                          </span>
-                          <span className="text-xs font-bold text-[#C5A059] font-mono block">
-                            {formatPKR(product.stitchedPrice)}
-                          </span>
-                        </div>
+                      )}
+                    </div>
+
+                    {/* Garment Info */}
+                    <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
+                      <div>
+                        <span className="text-[10px] text-[#C5A059] tracking-widest font-mono uppercase">{product.sku}</span>
+                        <h3 className="text-lg font-serif font-bold text-[#FCFBF7] group-hover:text-[#C5A059] transition-colors leading-snug">
+                          {product.name}
+                        </h3>
+                        <p className="text-xs text-gray-300 line-clamp-2 mt-1 font-light leading-relaxed">
+                          {product.description}
+                        </p>
                       </div>
 
-                      {/* Action Buttons */}
-                      <div className="grid grid-cols-2 gap-2 pt-0.5">
-                        <button
-                          onClick={() => setSelectedItemForModal(product)}
-                          className="py-2 text-[11px] font-semibold tracking-wider rounded-lg border border-[#C5A059]/50 text-[#C5A059] hover:bg-[#C5A059]/10 transition-colors flex items-center justify-center gap-1"
-                          title="View Sizing (Inches), Fabrics & Details"
-                        >
-                          <Ruler className="w-3 h-3" /> Size &amp; Chart
-                        </button>
-                        <button
-                          onClick={() => setSelectedItemForModal(product)}
-                          className="py-2 text-[11px] font-bold tracking-wider rounded-lg bg-[#C5A059] text-[#051712] hover:bg-[#d4af37] transition-colors flex items-center justify-center gap-1 shadow"
-                          title="Choose Stitched or Unstitched & Add to Bag"
-                        >
-                          <ShoppingBag className="w-3 h-3" /> Select &amp; Buy
-                        </button>
+                      <div className="pt-2 border-t border-[#C5A059]/20 space-y-2.5">
+                        {/* Dual Price Criteria: Stitched vs Unstitched */}
+                        <div className="grid grid-cols-2 gap-2 bg-[#051712]/80 p-2 rounded-xl border border-[#C5A059]/20">
+                          <div>
+                            <span className="text-[9px] text-amber-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                              <PackageCheck className="w-2.5 h-2.5" /> Unstitched
+                            </span>
+                            <span className="text-xs font-bold text-amber-300 font-mono block">
+                              {formatPKR(product.unstitchedPrice)}
+                            </span>
+                          </div>
+                          <div className="border-l border-[#C5A059]/20 pl-2">
+                            <span className="text-[9px] text-[#C5A059] font-bold uppercase tracking-wider flex items-center gap-1">
+                              <Scissors className="w-2.5 h-2.5" /> Stitched
+                            </span>
+                            <span className="text-xs font-bold text-[#C5A059] font-mono block">
+                              {formatPKR(product.stitchedPrice)}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="grid grid-cols-2 gap-2 pt-0.5">
+                          <button
+                            onClick={() => setSelectedItemForModal(product)}
+                            className="py-2 text-[11px] font-semibold tracking-wider rounded-lg border border-[#C5A059]/50 text-[#C5A059] hover:bg-[#C5A059]/10 transition-colors flex items-center justify-center gap-1"
+                            title="View Sizing (Inches), Fabrics & Details"
+                          >
+                            <Ruler className="w-3 h-3" /> Size &amp; Chart
+                          </button>
+                          <button
+                            onClick={() => setSelectedItemForModal(product)}
+                            className="py-2 text-[11px] font-bold tracking-wider rounded-lg bg-[#C5A059] text-[#051712] hover:bg-[#d4af37] transition-colors flex items-center justify-center gap-1 shadow"
+                            title="Choose Stitched or Unstitched & Add to Bag"
+                          >
+                            <ShoppingBag className="w-3 h-3" /> Select &amp; Buy
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-10 sm:p-14 rounded-3xl border border-[#C5A059]/30 bg-[#072A20]/60 text-center space-y-4 max-w-2xl mx-auto shadow-2xl">
+                <div className="w-16 h-16 rounded-full bg-[#C5A059]/10 border border-[#C5A059]/30 flex items-center justify-center mx-auto text-[#C5A059]">
+                  <ShoppingBag className="w-8 h-8 text-[#C5A059]" />
                 </div>
-              ))}
-            </div>
+                <h3 className="text-2xl font-serif font-bold text-white">
+                  Real Atelier Catalog is Being Updated
+                </h3>
+                <p className="text-xs sm:text-sm text-gray-300 font-light leading-relaxed">
+                  We are uploading real boutique designs, camera photos, and unstitched/stitched pricing directly from our physical store in Jampur. Place a custom bespoke order or contact our hotline directly.
+                </p>
+                <div className="pt-3 flex flex-wrap items-center justify-center gap-3">
+                  <button
+                    onClick={() => setIsBespokeModalOpen(true)}
+                    className="px-6 py-3 rounded-xl bg-[#C5A059] text-[#051712] font-serif font-bold text-xs uppercase tracking-wider hover:bg-[#d4af37] shadow-lg flex items-center gap-2 transition"
+                  >
+                    <Sparkles className="w-4 h-4" /> Create Your Own Dress
+                  </button>
+                  <a
+                    href={waLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-5 py-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 hover:text-white text-xs font-semibold flex items-center gap-2 transition"
+                  >
+                    <Phone className="w-4 h-4 text-emerald-400" /> WhatsApp Hotline
+                  </a>
+                  <Link
+                    href="/admin"
+                    className="px-4 py-3 rounded-xl bg-[#051712] border border-[#C5A059]/30 text-gray-400 hover:text-[#C5A059] text-xs font-medium transition"
+                  >
+                    Admin Center: Add Products &rarr;
+                  </Link>
+                </div>
+              </div>
+            )}
           </section>
 
           {/* ========================================================================= */}
@@ -1820,9 +1867,180 @@ export default function HauteCoutureApp() {
         </div>
       )}
 
-      {/* Footer */}
-      <footer className="border-t border-[#C5A059]/20 py-8 text-center text-xs text-gray-400 max-w-7xl mx-auto px-4">
-        KHADIJAH-TUL-QUBRAH BY Meer&Mus &copy; {new Date().getFullYear()} — Haute Couture Commerce, Bespoke Quotations & Atelier Management Engine.
+      {/* ========================================================================= */}
+      {/* FLOATING WHATSAPP CONCIERGE BUTTON (FIXED BOTTOM-RIGHT) */}
+      {/* ========================================================================= */}
+      <a
+        href={waLink}
+        target="_blank"
+        rel="noreferrer"
+        className="fixed bottom-20 lg:bottom-6 right-4 sm:right-6 z-40 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white px-4 py-3 rounded-full shadow-2xl shadow-emerald-900/60 border border-emerald-300/40 flex items-center gap-2.5 group transition-all transform hover:scale-105 active:scale-95"
+        title={`Chat directly with Atelier on WhatsApp: ${brandSettings.whatsappNumber}`}
+      >
+        <div className="relative">
+          <Phone className="w-5 h-5 fill-white text-white" />
+          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-yellow-300 animate-ping"></span>
+          <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
+        </div>
+        <div className="text-left hidden sm:block">
+          <span className="text-[10px] uppercase tracking-wider block text-emerald-100 font-sans font-bold leading-none">
+            Atelier WhatsApp
+          </span>
+          <span className="text-xs font-serif font-bold text-white leading-tight">
+            {brandSettings.whatsappNumber}
+          </span>
+        </div>
+      </a>
+
+      {/* ========================================================================= */}
+      {/* LUXURY FOOTER WITH TWO-WAY SOCIAL INTEGRATION & PHYSICAL BOUTIQUE INFO */}
+      {/* ========================================================================= */}
+      <footer className="border-t border-[#C5A059]/30 bg-[#030c09] text-gray-300 mt-20 pt-12 pb-24 lg:pb-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Col 1: Brand & Slogan */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full p-0.5 bg-gradient-to-tr from-[#C5A059] via-[#F3E5AB] to-[#99752D] overflow-hidden shrink-0">
+                  <img src="/brand-logo.jpg" alt="Logo" className="w-full h-full object-cover rounded-full" />
+                </div>
+                <div>
+                  <h4 className="font-serif font-bold text-white text-sm uppercase tracking-wider">
+                    {brandSettings.primaryDisplay}
+                  </h4>
+                  <p className="text-[10px] text-[#C5A059] font-mono tracking-widest uppercase">
+                    {brandSettings.secondarySignature}
+                  </p>
+                </div>
+              </div>
+              <p className="text-xs text-[#dfbc7a] font-mono tracking-[0.2em] font-semibold">
+                &ldquo;{brandSettings.tagline}&rdquo;
+              </p>
+              <p className="text-xs text-gray-400 leading-relaxed font-light">
+                Bridging imperial heritage couture and modern digital commerce. Handcrafted by master karigars in South Punjab, shipped worldwide.
+              </p>
+            </div>
+
+            {/* Col 2: Physical Store & Atelier (Shifting to Digital) */}
+            <div className="space-y-3">
+              <span className="text-xs font-serif font-bold uppercase tracking-widest text-[#C5A059] block border-b border-[#C5A059]/20 pb-1">
+                Physical Boutique &amp; Atelier
+              </span>
+              <div className="space-y-2 text-xs text-gray-300">
+                <div className="flex items-start gap-2">
+                  <MapPin className="w-4 h-4 text-[#C5A059] shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-semibold text-white block">{brandSettings.storeAddress}</span>
+                    <span className="text-gray-400">{brandSettings.storeCity}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-gray-300 pt-1">
+                  <Phone className="w-3.5 h-3.5 text-[#C5A059]" />
+                  <span>{brandSettings.supportPhone}</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-400">
+                  <ExternalLink className="w-3.5 h-3.5 text-[#C5A059]" />
+                  <span>{brandSettings.supportEmail}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Col 3: Two-Way Social Media Channels */}
+            <div className="space-y-3">
+              <span className="text-xs font-serif font-bold uppercase tracking-widest text-[#C5A059] block border-b border-[#C5A059]/20 pb-1">
+                Connect on Social Media
+              </span>
+              <p className="text-xs text-gray-400 leading-relaxed font-light">
+                Follow our official channels for behind-the-scenes karigar videos, real bride showcases, and new design releases.
+              </p>
+              <div className="flex flex-wrap gap-2.5 pt-1">
+                {brandSettings.instagramUrl && (
+                  <a
+                    href={brandSettings.instagramUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-2.5 rounded-xl bg-[#051712] border border-[#C5A059]/40 hover:border-[#C5A059] text-pink-400 hover:scale-110 transition-all shadow"
+                    title="Follow on Instagram"
+                  >
+                    <Instagram className="w-4 h-4" />
+                  </a>
+                )}
+                {brandSettings.facebookUrl && (
+                  <a
+                    href={brandSettings.facebookUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-2.5 rounded-xl bg-[#051712] border border-[#C5A059]/40 hover:border-[#C5A059] text-blue-400 hover:scale-110 transition-all shadow"
+                    title="Follow on Facebook"
+                  >
+                    <Facebook className="w-4 h-4" />
+                  </a>
+                )}
+                {brandSettings.youtubeUrl && (
+                  <a
+                    href={brandSettings.youtubeUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-2.5 rounded-xl bg-[#051712] border border-[#C5A059]/40 hover:border-[#C5A059] text-red-400 hover:scale-110 transition-all shadow"
+                    title="Watch on YouTube"
+                  >
+                    <Youtube className="w-4 h-4" />
+                  </a>
+                )}
+                <a
+                  href={waLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="p-2.5 rounded-xl bg-[#051712] border border-emerald-500/40 hover:border-emerald-400 text-emerald-400 hover:scale-110 transition-all shadow"
+                  title={`Chat on WhatsApp: ${brandSettings.whatsappNumber}`}
+                >
+                  <Phone className="w-4 h-4" />
+                </a>
+              </div>
+            </div>
+
+            {/* Col 4: Reciprocal Web & Store Link */}
+            <div className="space-y-3">
+              <span className="text-xs font-serif font-bold uppercase tracking-widest text-[#C5A059] block border-b border-[#C5A059]/20 pb-1">
+                From Physical to Digital
+              </span>
+              <p className="text-xs text-gray-400 leading-relaxed font-light">
+                Share our official website on your social profiles so your clients can place custom stitched &amp; unstitched orders online with real-time tracking.
+              </p>
+              <div className="p-3 rounded-xl bg-[#051712] border border-[#C5A059]/30 text-xs text-[#C5A059] space-y-1">
+                <span className="font-mono text-[10px] text-gray-400 block uppercase">WhatsApp Direct Hotline</span>
+                <a href={waLink} target="_blank" rel="noreferrer" className="font-mono font-bold text-emerald-400 hover:underline block">
+                  {brandSettings.whatsappNumber}
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Copyright & Department Links */}
+          <div className="border-t border-[#C5A059]/20 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
+            <div>
+              {brandSettings.officialName} &copy; {new Date().getFullYear()} — All Rights Reserved. Physical Boutique &amp; Digital Atelier.
+            </div>
+            <div className="flex items-center gap-4 text-gray-400">
+              <Link href="/admin" className="hover:text-[#C5A059] transition-colors">
+                Admin Management
+              </Link>
+              <span>&bull;</span>
+              <Link href="/designer" className="hover:text-[#C5A059] transition-colors">
+                Designer Portal
+              </Link>
+              <span>&bull;</span>
+              <Link href="/production" className="hover:text-[#C5A059] transition-colors">
+                Production Floor
+              </Link>
+              <span>&bull;</span>
+              <Link href="/register" className="hover:text-[#C5A059] transition-colors">
+                VIP Client Portal
+              </Link>
+            </div>
+          </div>
+        </div>
       </footer>
     </div>
   );

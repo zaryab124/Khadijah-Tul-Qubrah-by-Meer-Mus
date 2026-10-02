@@ -91,27 +91,13 @@ export default function DesignerLoginPage() {
               />
             </div>
 
-            <div className="p-3 rounded-xl bg-[#051712] border border-[#E0A96D]/30 text-[11px] text-gray-300 space-y-1">
-              <span className="text-[#E0A96D] font-bold block uppercase tracking-wider font-mono text-[10px]">
-                Authorized Designer Credentials:
-              </span>
-              <div className="flex justify-between font-mono text-[11px]">
-                <span>Username:</span>
-                <strong className="text-white">designer</strong>
-              </div>
-              <div className="flex justify-between font-mono text-[11px]">
-                <span>Password:</span>
-                <strong className="text-white">DesignerPass2026!</strong>
-              </div>
-            </div>
-
             <div className="pt-2 space-y-2">
               <button
                 type="submit"
                 disabled={loading}
                 className="w-full py-3.5 bg-gradient-to-r from-[#E0A96D] to-[#dfbc7a] text-[#051712] font-black rounded-xl text-xs uppercase tracking-widest transition-all cursor-pointer shadow-lg shadow-[#E0A96D]/20 hover:brightness-110"
               >
-                {loading ? 'Authenticating...' : 'Sign In as Haute Designer'}
+                {loading ? 'Authenticating...' : 'Sign In to Designer Studio'}
               </button>
             </div>
           </form>

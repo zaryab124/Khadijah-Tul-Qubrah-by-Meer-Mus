@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import PortalGuard from '../../../components/PortalGuard';
 import {
@@ -45,74 +45,57 @@ export default function CampaignsManagementPage() {
   const [formCode, setFormCode] = useState('');
   const [formBudget, setFormBudget] = useState(150000);
 
-  const [campaigns, setCampaigns] = useState<CampaignItem[]>([
-    {
-      id: 'camp-01',
-      name: 'Festive Velvet & Zardozi Preview 2026',
-      platform: 'Instagram',
-      campaignCode: 'SUMMER26',
-      budget: 250000,
-      status: 'ACTIVE',
-      startDate: '2026-06-01',
-      endDate: '2026-08-31',
-      leadsCount: 48,
-      customersCount: 16,
-      ordersCount: 12,
-      realizedRevenue: 3450000,
-      roiPercentage: 1280.0,
-    },
-    {
-      id: 'camp-02',
-      name: 'Bridal Bespoke Concierge WhatsApp VIP',
-      platform: 'WhatsApp',
-      campaignCode: 'BRIDALVIP26',
-      budget: 80000,
-      status: 'ACTIVE',
-      startDate: '2026-05-15',
-      endDate: '2026-11-30',
-      leadsCount: 22,
-      customersCount: 11,
-      ordersCount: 9,
-      realizedRevenue: 2890000,
-      roiPercentage: 3512.5,
-    },
-    {
-      id: 'camp-03',
-      name: 'TikTok Festive Scallop & Craft Reels',
-      platform: 'TikTok',
-      campaignCode: 'TIKTOKGLAM',
-      budget: 120000,
-      status: 'ACTIVE',
-      startDate: '2026-06-10',
-      endDate: '2026-07-20',
-      leadsCount: 64,
-      customersCount: 14,
-      ordersCount: 8,
-      realizedRevenue: 1480000,
-      roiPercentage: 1133.3,
-    },
-  ]);
+  // Live Campaigns State (No dummy data)
+  const [campaigns, setCampaigns] = useState<CampaignItem[]>([]);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('khadijah_campaigns');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setCampaigns(parsed);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load campaigns', e);
+    }
+  }, []);
 
   const handleCreateCampaign = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formName.trim() || !formCode.trim()) {
+      alert('Please provide a campaign name and tracking code.');
+      return;
+    }
+
     const newCamp: CampaignItem = {
       id: `camp-${Date.now()}`,
-      name: formName,
+      name: formName.trim(),
       platform: formPlatform,
       campaignCode: formCode.toUpperCase().trim(),
-      budget: formBudget,
+      budget: Number(formBudget) || 0,
       status: 'ACTIVE',
+      startDate: new Date().toISOString().split('T')[0],
       leadsCount: 0,
       customersCount: 0,
       ordersCount: 0,
       realizedRevenue: 0,
       roiPercentage: 0,
     };
-    setCampaigns([newCamp, ...campaigns]);
+
+    const updated = [newCamp, ...campaigns];
+    setCampaigns(updated);
+    try {
+      localStorage.setItem('khadijah_campaigns', JSON.stringify(updated));
+    } catch (err) {
+      console.error('Failed to save campaign', err);
+    }
+
     setCreateModalOpen(false);
     setFormName('');
     setFormCode('');
-    alert(`Campaign "${newCamp.name}" (${newCamp.campaignCode}) created successfully with tracking link.`);
+    alert(`Campaign "${newCamp.name}" (${newCamp.campaignCode}) created successfully.`);
   };
 
   const totalBudget = campaigns.reduce((sum, c) => sum + c.budget, 0);
@@ -227,54 +210,65 @@ export default function CampaignsManagementPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-800/80">
-              {campaigns.map((camp) => (
-                <tr
-                  key={camp.id}
-                  onClick={() => setSelectedCampaign(camp)}
-                  className={`hover:bg-[#072A20]/60 transition cursor-pointer ${
-                    selectedCampaign?.id === camp.id ? 'bg-[#072A20] border-l-2 border-[#C5A059]' : ''
-                  }`}
-                >
-                  <td className="p-3.5 font-medium text-[#FCFBF7]">
-                    {camp.name}
-                    <div className="text-[10px] text-gray-400 mt-0.5">
-                      {camp.startDate} &rarr; {camp.endDate || 'Ongoing'}
-                    </div>
-                  </td>
-                  <td className="p-3.5">
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-gray-800 text-gray-300">
-                      {camp.platform}
-                    </span>
-                  </td>
-                  <td className="p-3.5 font-mono text-[#C5A059] font-bold">
-                    ?campaign_code={camp.campaignCode}
-                  </td>
-                  <td className="p-3.5">PKR {camp.budget.toLocaleString()}</td>
-                  <td className="p-3.5">
-                    <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-950 text-emerald-400 border border-emerald-800/50">
-                      {camp.status}
-                    </span>
-                  </td>
-                  <td className="p-3.5 text-right font-medium text-[#FCFBF7]">{camp.ordersCount}</td>
-                  <td className="p-3.5 text-right font-bold text-[#C5A059]">
-                    PKR {camp.realizedRevenue.toLocaleString()}
-                  </td>
-                  <td className="p-3.5 text-right text-emerald-400 font-semibold">
-                    +{camp.roiPercentage.toFixed(0)}%
-                  </td>
-                  <td className="p-3.5 text-center">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedCampaign(camp);
-                      }}
-                      className="text-[#C5A059] hover:underline flex items-center gap-1 mx-auto text-xs"
-                    >
-                      Inspect <ExternalLink className="w-3 h-3" />
-                    </button>
+              {campaigns.length > 0 ? (
+                campaigns.map((camp) => (
+                  <tr
+                    key={camp.id}
+                    onClick={() => setSelectedCampaign(camp)}
+                    className={`hover:bg-[#072A20]/60 transition cursor-pointer ${
+                      selectedCampaign?.id === camp.id ? 'bg-[#072A20] border-l-2 border-[#C5A059]' : ''
+                    }`}
+                  >
+                    <td className="p-3.5 font-medium text-[#FCFBF7]">
+                      {camp.name}
+                      <div className="text-[10px] text-gray-400 mt-0.5">
+                        {camp.startDate} &rarr; {camp.endDate || 'Ongoing'}
+                      </div>
+                    </td>
+                    <td className="p-3.5">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-gray-800 text-gray-300">
+                        {camp.platform}
+                      </span>
+                    </td>
+                    <td className="p-3.5 font-mono text-[#C5A059] font-bold">
+                      ?campaign_code={camp.campaignCode}
+                    </td>
+                    <td className="p-3.5">PKR {camp.budget.toLocaleString()}</td>
+                    <td className="p-3.5">
+                      <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-950 text-emerald-400 border border-emerald-800/50">
+                        {camp.status}
+                      </span>
+                    </td>
+                    <td className="p-3.5 text-right font-medium text-[#FCFBF7]">{camp.ordersCount}</td>
+                    <td className="p-3.5 text-right font-bold text-[#C5A059]">
+                      PKR {camp.realizedRevenue.toLocaleString()}
+                    </td>
+                    <td className="p-3.5 text-right text-emerald-400 font-semibold">
+                      +{camp.roiPercentage.toFixed(0)}%
+                    </td>
+                    <td className="p-3.5 text-center">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedCampaign(camp);
+                        }}
+                        className="text-[#C5A059] hover:underline flex items-center gap-1 mx-auto text-xs"
+                      >
+                        Inspect <ExternalLink className="w-3 h-3" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={9} className="p-8 text-center text-gray-400">
+                    <p className="font-serif text-sm text-[#FCFBF7]">No Marketing Campaigns Launched Yet</p>
+                    <p className="text-xs text-gray-500 mt-1 max-w-sm mx-auto">
+                      Click &quot;Launch Campaign&quot; above to create trackable links for Instagram, TikTok, or WhatsApp marketing.
+                    </p>
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

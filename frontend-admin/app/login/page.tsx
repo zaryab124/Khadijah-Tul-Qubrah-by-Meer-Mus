@@ -255,31 +255,6 @@ export default function MasterLoginPage() {
               </button>
             </form>
 
-            {/* Authorized Staff Credentials Guide */}
-            <div className="mt-4 p-3.5 rounded-xl bg-[#051712] border border-[#C5A059]/40 text-xs space-y-2">
-              <span className="text-[#C5A059] font-serif font-bold uppercase tracking-wider block text-[10px]">
-                Authorized Staff Credentials Directory:
-              </span>
-              <div className="space-y-1.5 font-mono text-[11px] text-gray-300">
-                <div className="flex justify-between border-b border-[#C5A059]/15 pb-1">
-                  <span className="text-[#C5A059]">👑 Owner &amp; Admin:</span>
-                  <span className="text-white font-bold">admin / AdminPassword2026!</span>
-                </div>
-                <div className="flex justify-between border-b border-[#C5A059]/15 pb-1">
-                  <span className="text-[#E0A96D]">✂️ Haute Designer:</span>
-                  <span className="text-white font-bold">designer / DesignerPass2026!</span>
-                </div>
-                <div className="flex justify-between border-b border-[#C5A059]/15 pb-1">
-                  <span className="text-[#10B981]">🧵 Production Floor:</span>
-                  <span className="text-white font-bold">production / ProductionPass2026!</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#38BDF8]">🎧 VIP Concierge:</span>
-                  <span className="text-white font-bold">agent / AgentPass2026!</span>
-                </div>
-              </div>
-            </div>
-
             <div className="mt-4 pt-3 border-t border-[#C5A059]/20 flex items-center justify-between text-xs text-[#FCFBF7]/60">
               <Link href="/register" className="text-[#C5A059] hover:underline font-bold">
                 Customer Sign-In &amp; Registration &rarr;
