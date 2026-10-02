@@ -71,12 +71,12 @@ export const Navbar: React.FC<Props> = ({
       {/* ========================================================================= */}
       <header className="sticky top-0 z-40 bg-[#030c09]/95 backdrop-blur-md border-b border-[#C5A059]/30 text-[#FCFBF7] shadow-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20 sm:h-24">
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center h-20 sm:h-24 gap-2 sm:gap-4">
             
             {/* ------------------------------------------------------------------- */}
-            {/* 1. LEFT WING: Atelier Selector & Quick Links */}
+            {/* 1. LEFT WING: Boutique Branch Selector & Mobile Menu Only */}
             {/* ------------------------------------------------------------------- */}
-            <div className="flex items-center gap-1.5 sm:gap-4 flex-1 justify-start min-w-0">
+            <div className="flex items-center gap-1.5 sm:gap-3 justify-start min-w-0">
               {/* Mobile Drawer Hamburger Button */}
               <button
                 onClick={() => setMobileMenuOpen(true)}
@@ -108,22 +108,12 @@ export const Navbar: React.FC<Props> = ({
                   <ChevronDown className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#C5A059]/60 ml-0.5" />
                 </button>
               )}
-
-              {/* Desktop Quick Nav Links */}
-              <nav className="hidden xl:flex items-center gap-5 text-xs font-serif tracking-wider uppercase ml-3 text-white/80 whitespace-nowrap">
-                <a href="#catalog" className="hover:text-[#C5A059] transition-colors py-1">
-                  Shop Collection
-                </a>
-                <Link href="/order-tracking/ORD-2026-KTQ" className="hover:text-[#C5A059] transition-colors py-1 flex items-center gap-1.5">
-                  <Truck className="w-3.5 h-3.5 text-[#C5A059]" /> Track Order
-                </Link>
-              </nav>
             </div>
 
             {/* ------------------------------------------------------------------- */}
-            {/* 2. CENTERPIECE: Perfectly Centered Brand Insignia & Slogan */}
+            {/* 2. CENTERPIECE: Brand Insignia & Slogan with Protected Margins */}
             {/* ------------------------------------------------------------------- */}
-            <div className="flex flex-col items-center justify-center shrink-0 text-center px-2 sm:px-4 z-10">
+            <div className="flex flex-col items-center justify-center shrink-0 text-center px-4 sm:px-8 z-10">
               <Link href="/" className="flex flex-col items-center group">
                 <div className="flex items-center gap-2 sm:gap-3">
                   {/* Real Royal Velvet Insignia Medallion */}
@@ -153,9 +143,19 @@ export const Navbar: React.FC<Props> = ({
             </div>
 
             {/* ------------------------------------------------------------------- */}
-            {/* 3. RIGHT WING: Bespoke Studio, Portals Switcher, Account & Cart */}
+            {/* 3. RIGHT WING: Track Order, Bespoke Studio, Account & Cart */}
             {/* ------------------------------------------------------------------- */}
-            <div className="flex items-center gap-1.5 sm:gap-3 flex-1 justify-end min-w-0">
+            <div className="flex items-center gap-1.5 sm:gap-3 justify-end min-w-0">
+              {/* Order Tracking Utility Link */}
+              <Link
+                href="/order-tracking/ORD-2026-KTQ"
+                className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-serif font-bold uppercase tracking-wider text-white/80 hover:text-[#C5A059] hover:bg-[#051712] border border-[#C5A059]/20 hover:border-[#C5A059]/50 transition-all shrink-0"
+                title="Track Order Status in Real-Time"
+              >
+                <Truck className="w-3.5 h-3.5 text-[#C5A059]" />
+                <span>Track Order</span>
+              </Link>
+
               {/* "Create Your Own" Custom Order CTA */}
               <button
                 onClick={onOpenBespoke}
