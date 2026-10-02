@@ -165,7 +165,7 @@ export default function HauteCoutureApp() {
   }, []);
 
   const cleanWa = brandSettings.whatsappNumber.replace(/[^0-9]/g, '');
-  const waLink = `https://wa.me/${cleanWa || '923000000000'}?text=${encodeURIComponent('Hello KHADIJAH-TUL-QUBRAH By Meer&Mus, I am interested in inquiring about your haute couture and bespoke designs.')}`;
+  const waLink = `https://wa.me/${cleanWa || '923359301919'}?text=${encodeURIComponent('Hello KHADIJAH-TUL-QUBRAH By Meer&Mus, I am interested in inquiring about your haute couture and bespoke designs.')}`;
 
   // Video Deals & Campaigns (Real base only, defaults to empty)
   const [videoDeals, setVideoDeals] = useState<VideoDeal[]>([]);

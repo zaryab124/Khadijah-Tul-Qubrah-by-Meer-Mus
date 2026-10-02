@@ -21,8 +21,8 @@ export const DEFAULT_BRAND_SETTINGS: BrandSettings = {
   primaryDisplay: 'KHADIJAH-TUL-QUBRAH',
   secondarySignature: 'BY Meer&Mus',
   tagline: 'STAY HONEST , STAND LONG',
-  whatsappNumber: '+923000000000',
-  supportPhone: '+923000000000',
+  whatsappNumber: '+923359301919',
+  supportPhone: '+923359301919',
   supportEmail: 'info@khadijatulqubrah.com',
   instagramUrl: 'https://instagram.com',
   facebookUrl: 'https://facebook.com',
@@ -39,7 +39,15 @@ export function getBrandSettings(): BrandSettings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      return { ...DEFAULT_BRAND_SETTINGS, ...JSON.parse(raw) };
+      const parsed = JSON.parse(raw);
+      // Migrate old placeholder numbers to the verified official business WhatsApp
+      if (!parsed.whatsappNumber || parsed.whatsappNumber === '+923000000000') {
+        parsed.whatsappNumber = '+923359301919';
+      }
+      if (!parsed.supportPhone || parsed.supportPhone === '+923000000000') {
+        parsed.supportPhone = '+923359301919';
+      }
+      return { ...DEFAULT_BRAND_SETTINGS, ...parsed };
     }
   } catch (e) {
     console.error('Failed to load brand settings', e);
