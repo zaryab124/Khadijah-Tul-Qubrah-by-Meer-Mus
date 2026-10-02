@@ -173,11 +173,11 @@ export default function AdminControlCenterPage() {
   const [productForm, setProductForm] = useState({
     name: '',
     sku: '',
-    category: 'Bridal Couture',
-    stitchedPrice: 485000,
-    unstitchedPrice: 345000,
-    fabric: 'Micro Velvet 9000 & Loomed Silk',
-    craft: '24k Metallic Tilla & Antique Zardozi',
+    category: 'Cotton',
+    stitchedPrice: 12500,
+    unstitchedPrice: 8500,
+    fabric: 'Pure Cotton',
+    craft: 'Hand Embroidery & Motif',
     imageUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?auto=format&fit=crop&w=1200&q=80',
     description: '',
   });
@@ -186,7 +186,7 @@ export default function AdminControlCenterPage() {
   const [isGalleryModalOpen, setIsGalleryModalOpen] = useState(false);
   const [galleryForm, setGalleryForm] = useState({
     title: '',
-    category: 'Bridal Couture',
+    category: 'Cotton',
     imageUrl: '',
   });
 
@@ -316,10 +316,13 @@ export default function AdminControlCenterPage() {
   }, []);
 
   const [categories, setCategories] = useState([
-    { id: 'cat-1', name: 'Bridal Couture', slug: 'bridal-couture', productsCount: 14 },
-    { id: 'cat-2', name: 'Haute Couture', slug: 'haute-couture', productsCount: 22 },
-    { id: 'cat-3', name: 'Luxury Pret', slug: 'luxury-pret', productsCount: 18 },
-    { id: 'cat-4', name: 'Formal Atelier', slug: 'formal-atelier', productsCount: 9 },
+    { id: 'cat-1', name: 'Cotton', slug: 'cotton', productsCount: 0 },
+    { id: 'cat-2', name: 'Khaddar', slug: 'khaddar', productsCount: 0 },
+    { id: 'cat-3', name: 'Bin Saeed Lawn', slug: 'bin-saeed-lawn', productsCount: 0 },
+    { id: 'cat-4', name: 'Linen', slug: 'linen', productsCount: 0 },
+    { id: 'cat-5', name: 'Embroidery', slug: 'embroidery', productsCount: 0 },
+    { id: 'cat-6', name: 'Karandi', slug: 'karandi', productsCount: 0 },
+    { id: 'cat-7', name: 'Gents Suits (Wool & Washing Wear)', slug: 'gents-suits', productsCount: 0 },
   ]);
 
   const [colours, setColours] = useState([
@@ -1915,10 +1918,13 @@ export default function AdminControlCenterPage() {
                   onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
                   className="w-full bg-[#072A20] border border-[#C5A059]/40 rounded-xl p-2.5 text-white focus:outline-none focus:border-[#C5A059]"
                 >
-                  <option value="Bridal Couture">Bridal Couture</option>
-                  <option value="Haute Couture">Haute Couture</option>
-                  <option value="Luxury Pret">Luxury Pret</option>
-                  <option value="Formal Atelier">Formal Atelier</option>
+                  <option value="Cotton">Cotton</option>
+                  <option value="Khaddar">Khaddar</option>
+                  <option value="Bin Saeed Lawn">Bin Saeed Lawn</option>
+                  <option value="Linen">Linen</option>
+                  <option value="Embroidery">Embroidery</option>
+                  <option value="Karandi">Karandi</option>
+                  <option value="Gents Suits">Gents Suits (Wool &amp; Washing Wear)</option>
                 </select>
               </div>
 
@@ -2235,11 +2241,13 @@ export default function AdminControlCenterPage() {
                   onChange={(e) => setGalleryForm({ ...galleryForm, category: e.target.value })}
                   className="w-full bg-[#072A20] border border-[#C5A059]/40 rounded-xl p-2.5 text-white focus:outline-none focus:border-[#C5A059]"
                 >
-                  <option value="Bridal Couture">Bridal Couture</option>
-                  <option value="Haute Couture">Haute Couture</option>
-                  <option value="Luxury Pret">Luxury Pret</option>
-                  <option value="Formal Atelier">Formal Atelier</option>
-                  <option value="Fabrics & Swatches">Fabrics &amp; Swatches</option>
+                  <option value="Cotton">Cotton</option>
+                  <option value="Khaddar">Khaddar</option>
+                  <option value="Bin Saeed Lawn">Bin Saeed Lawn</option>
+                  <option value="Linen">Linen</option>
+                  <option value="Embroidery">Embroidery</option>
+                  <option value="Karandi">Karandi</option>
+                  <option value="Gents Suits">Gents Suits (Wool &amp; Washing Wear)</option>
                 </select>
               </div>
 

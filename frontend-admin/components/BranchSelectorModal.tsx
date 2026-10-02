@@ -19,11 +19,11 @@ export interface AtelierBranch {
 
 export const ATELIER_BRANCHES: AtelierBranch[] = [
   {
-    id: 'b-jampur',
-    name: 'Main Boutique & Workshop',
-    city: 'Jampur, Pakistan',
-    address: 'Circular Road, Jampur, District Rajanpur, Punjab, Pakistan',
-    phone: '+92 300 0000000',
+    id: 'b-lahore',
+    name: 'Main Flagship Boutique & Atelier',
+    city: 'Lahore, Pakistan',
+    address: 'Gulberg III / MM Alam Road, Lahore, Punjab, Pakistan',
+    phone: '+92 335 9301919',
     isFlagship: true,
     capabilities: {
       bespoke_fittings: true,
@@ -60,7 +60,7 @@ export const BranchSelectorModal: React.FC<Props> = ({
             </div>
             <div>
               <h3 className="font-serif font-bold text-lg text-white">Our Store Location</h3>
-              <p className="text-xs text-[#FCFBF7]/60">Sole Official Branch in Jampur, Pakistan</p>
+              <p className="text-xs text-[#FCFBF7]/60">Sole Official Flagship in Lahore, Pakistan</p>
             </div>
           </div>
           <button
@@ -84,7 +84,7 @@ export const BranchSelectorModal: React.FC<Props> = ({
               <p className="text-xs text-gray-300 mt-1 leading-relaxed">{branch.address}</p>
               <div className="flex items-center gap-2 pt-2 text-xs text-[#C5A059] font-medium">
                 <MapPin className="w-3.5 h-3.5" />
-                <span>Jampur, Punjab, Pakistan</span>
+                <span>Lahore, Punjab, Pakistan</span>
               </div>
             </div>
 
@@ -112,7 +112,7 @@ export const BranchSelectorModal: React.FC<Props> = ({
         <div className="p-3.5 rounded-xl bg-[#051712] border border-[#C5A059]/30 text-xs text-gray-300 space-y-1">
           <p className="font-semibold text-[#C5A059]">Visiting Our Boutique:</p>
           <p className="text-[11px] text-gray-400 leading-relaxed">
-            You are warmly welcome to visit our boutique in Jampur for bridal measurements and fittings. We also deliver all orders safely to your doorstep anywhere in Pakistan and internationally.
+            You are warmly welcome to visit our boutique in Lahore for bridal measurements and fittings. We also deliver all orders safely to your doorstep anywhere in Pakistan and internationally.
           </p>
         </div>
 
@@ -120,7 +120,7 @@ export const BranchSelectorModal: React.FC<Props> = ({
           onClick={onClose}
           className="w-full py-2.5 rounded-xl bg-[#C5A059] hover:bg-[#d4af37] text-[#051712] font-bold text-xs uppercase tracking-wider transition-colors shadow"
         >
-          Confirm Location (Jampur)
+          Confirm Location (Lahore)
         </button>
       </div>
     </div>

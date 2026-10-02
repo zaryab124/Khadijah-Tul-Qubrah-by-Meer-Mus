@@ -28,8 +28,8 @@ export const DEFAULT_BRAND_SETTINGS: BrandSettings = {
   facebookUrl: 'https://facebook.com',
   tiktokUrl: 'https://tiktok.com',
   youtubeUrl: 'https://youtube.com',
-  storeAddress: 'Main Boutique & Workshop, Jampur',
-  storeCity: 'Jampur, Punjab, Pakistan',
+  storeAddress: 'Main Flagship Boutique & Atelier, Lahore',
+  storeCity: 'Lahore, Punjab, Pakistan',
 };
 
 const STORAGE_KEY = 'khadijah_brand_settings';
@@ -46,6 +46,13 @@ export function getBrandSettings(): BrandSettings {
       }
       if (!parsed.supportPhone || parsed.supportPhone === '+923000000000') {
         parsed.supportPhone = '+923359301919';
+      }
+      // Migrate old store address to Lahore
+      if (!parsed.storeCity || parsed.storeCity.includes('Jampur')) {
+        parsed.storeCity = 'Lahore, Punjab, Pakistan';
+      }
+      if (!parsed.storeAddress || parsed.storeAddress.includes('Jampur')) {
+        parsed.storeAddress = 'Main Flagship Boutique & Atelier, Lahore';
       }
       return { ...DEFAULT_BRAND_SETTINGS, ...parsed };
     }

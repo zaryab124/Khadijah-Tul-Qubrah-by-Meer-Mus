@@ -72,17 +72,17 @@ export const Navbar: React.FC<Props> = ({
       <div className="bg-[#020a07] border-b border-[#C5A059]/25 text-[#FCFBF7] text-xs font-serif py-2 px-4 sm:px-8">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           
-          {/* Left: Our Boutique Selector */}
+          {/* Left: Flagship Boutique Selector (Lahore, Pakistan) */}
           {activeBranch && (
             <button
               onClick={() => setIsBranchModalOpen(true)}
               className="flex items-center gap-1.5 text-xs text-[#dfbc7a] hover:text-[#C5A059] font-medium transition-colors group shrink-0"
-              title="Select Physical Atelier Branch"
+              title="Select Physical Flagship Branch: Lahore, Pakistan"
             >
               <MapPin className="w-3.5 h-3.5 text-[#C5A059] group-hover:scale-110 transition-transform" />
               <span className="text-[11px] uppercase tracking-wider text-gray-400 font-sans hidden sm:inline">Our Boutique:</span>
               <span className="font-serif font-bold text-white underline decoration-[#C5A059]/50 underline-offset-2">
-                Jampur, Pakistan
+                Lahore, Pakistan
               </span>
               <ChevronDown className="w-3 h-3 text-[#C5A059]/70" />
             </button>
@@ -158,9 +158,9 @@ export const Navbar: React.FC<Props> = ({
             {/* ------------------------------------------------------------------- */}
             <div className="flex flex-col items-center justify-center shrink-0 text-center px-4">
               <Link href="/" className="flex flex-col items-center group">
-                <div className="flex items-center gap-2.5 sm:gap-3.5">
+                <div className="flex items-center gap-3 sm:gap-4">
                   {/* Real Royal Velvet Insignia Medallion */}
-                  <div className="w-10 h-10 sm:w-13 sm:h-13 rounded-full p-0.5 bg-gradient-to-tr from-[#C5A059] via-[#F3E5AB] to-[#99752D] ring-2 ring-[#C5A059]/60 shadow-xl shadow-[#C5A059]/30 group-hover:scale-105 transition-transform overflow-hidden shrink-0">
+                  <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-full p-0.5 bg-gradient-to-tr from-[#99752D] via-[#F3E5AB] to-[#C5A059] ring-2 ring-[#C5A059]/80 shadow-[0_0_20px_rgba(197,160,89,0.3)] group-hover:scale-105 transition-transform overflow-hidden shrink-0">
                     <img
                       src="/brand-logo.jpg"
                       alt="KHADIJAH-TUL-QUBRAH by Meer&Mus"
@@ -169,10 +169,10 @@ export const Navbar: React.FC<Props> = ({
                   </div>
 
                   <div className="text-left sm:text-center whitespace-nowrap">
-                    <span className="text-sm sm:text-xl font-serif font-black tracking-widest text-[#FCFBF7] leading-none uppercase block">
-                      KHADIJAH-TUL-<span className="text-[#C5A059]">QUBRAH</span>
+                    <span className="text-sm sm:text-xl font-serif font-black tracking-[0.22em] bg-gradient-to-r from-[#FFFDF9] via-[#F5E6BE] to-[#DFC083] bg-clip-text text-transparent leading-none uppercase block drop-shadow-sm">
+                      KHADIJAH-TUL-QUBRAH
                     </span>
-                    <span className="text-[10px] sm:text-xs block text-[#C5A059] font-serif font-bold tracking-[0.25em] uppercase mt-1">
+                    <span className="text-[10px] sm:text-xs block text-[#C5A059] font-serif font-bold tracking-[0.35em] uppercase mt-1">
                       by Meer&amp;Mus
                     </span>
                   </div>
@@ -279,6 +279,37 @@ export const Navbar: React.FC<Props> = ({
 
           </div>
         </div>
+
+        {/* ========================================================================= */}
+        {/* 3. COUTURE CATEGORY NAVIGATION RIBBON (The Official 7 Categories) */}
+        {/* ========================================================================= */}
+        <nav className="border-t border-[#C5A059]/20 bg-[#020a07]/90 py-2.5 px-4 hidden md:block">
+          <div className="max-w-7xl mx-auto flex items-center justify-center gap-6 lg:gap-10 text-[11px] font-serif tracking-[0.2em] uppercase font-bold text-gray-300">
+            {[
+              { name: 'Cotton', id: 'Cotton' },
+              { name: 'Khaddar', id: 'Khaddar' },
+              { name: 'Bin Saeed Lawn', id: 'Bin Saeed Lawn' },
+              { name: 'Linen', id: 'Linen' },
+              { name: 'Embroidery', id: 'Embroidery' },
+              { name: 'Karandi', id: 'Karandi' },
+              { name: 'Gents Suits (Wool & Washing Wear)', id: 'Gents Suits' },
+            ].map((cat) => (
+              <a
+                key={cat.id}
+                href="#catalog"
+                onClick={() => {
+                  if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('khadijah_select_category', { detail: cat.id }));
+                  }
+                }}
+                className="hover:text-[#C5A059] transition-all relative py-1 group whitespace-nowrap cursor-pointer"
+              >
+                <span>{cat.name}</span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#C5A059] transition-all duration-300 group-hover:w-full" />
+              </a>
+            ))}
+          </div>
+        </nav>
       </header>
 
       {/* ========================================================================= */}

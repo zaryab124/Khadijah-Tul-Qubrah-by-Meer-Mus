@@ -160,8 +160,17 @@ export default function HauteCoutureApp() {
         setBrandSettings(getBrandSettings());
       }
     };
+    const handleCategorySelect = (e: any) => {
+      if (e.detail) {
+        setSelectedCategory(e.detail);
+      }
+    };
     window.addEventListener('khadijah_brand_settings_updated', handleBrandUpdate);
-    return () => window.removeEventListener('khadijah_brand_settings_updated', handleBrandUpdate);
+    window.addEventListener('khadijah_select_category', handleCategorySelect);
+    return () => {
+      window.removeEventListener('khadijah_brand_settings_updated', handleBrandUpdate);
+      window.removeEventListener('khadijah_select_category', handleCategorySelect);
+    };
   }, []);
 
   const cleanWa = brandSettings.whatsappNumber.replace(/[^0-9]/g, '');
@@ -859,7 +868,7 @@ export default function HauteCoutureApp() {
                     Master Karigar Showcase in Curation
                   </h3>
                   <p className="text-xs sm:text-sm text-gray-300 font-light leading-relaxed">
-                    Our atelier needlework pieces (24k Metallic Tilla, Antique Zardozi, Kora Dabka wirework, and Marori) are being hand-photographed directly from our workshop in Jampur. You can commission any custom handcraft embroidery on your choice of fabric right now.
+                    Our atelier needlework pieces (24k Metallic Tilla, Antique Zardozi, Kora Dabka wirework, and Marori) are being hand-photographed directly from our workshop in Lahore. You can commission any custom handcraft embroidery on your choice of fabric right now.
                   </p>
                   <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
                     <button
@@ -910,11 +919,14 @@ export default function HauteCoutureApp() {
             {/* Category Filter Pills with Icons (Smooth horizontal touch swipe) */}
             <div className="flex overflow-x-auto no-scrollbar scroll-smooth gap-2.5 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
               {[
-                { id: 'ALL', label: 'All Clothes', icon: Sparkles },
-                { id: 'Bridal Couture', label: 'Bridal Wear', icon: Crown },
-                { id: 'Haute Couture', label: 'Party Wear', icon: Scissors },
-                { id: 'Luxury Pret', label: 'Ready to Wear', icon: ShoppingBag },
-                { id: 'Raw Silk & Velvet', label: 'Silk & Velvet', icon: Palette },
+                { id: 'ALL', label: 'All Collection', icon: Sparkles },
+                { id: 'Cotton', label: 'Cotton', icon: Scissors },
+                { id: 'Khaddar', label: 'Khaddar', icon: Palette },
+                { id: 'Bin Saeed Lawn', label: 'Bin Saeed Lawn', icon: Crown },
+                { id: 'Linen', label: 'Linen', icon: Sparkles },
+                { id: 'Embroidery', label: 'Embroidery', icon: Sparkles },
+                { id: 'Karandi', label: 'Karandi', icon: Palette },
+                { id: 'Gents Suits', label: 'Gents Suits (Wool & Washing Wear)', icon: ShoppingBag },
               ].map((cat) => {
                 const CatIcon = cat.icon;
                 const isSelected = selectedCategory === cat.id;
@@ -924,8 +936,8 @@ export default function HauteCoutureApp() {
                     onClick={() => setSelectedCategory(cat.id)}
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-semibold tracking-wider whitespace-nowrap transition-all border ${
                       isSelected
-                        ? 'bg-[#C5A059] text-[#051712] border-[#C5A059] font-bold shadow-lg shadow-[#C5A059]/20'
-                        : 'bg-[#072A20]/80 text-[#FCFBF7]/80 border-[#C5A059]/30 hover:border-[#C5A059]'
+                        ? 'bg-[#C5A059] text-[#051712] border-[#C5A059] font-bold shadow-lg shadow-[#C5A059]/20 scale-105'
+                        : 'bg-[#072A20]/80 text-[#FCFBF7]/80 border-[#C5A059]/30 hover:border-[#C5A059] hover:text-white'
                     }`}
                   >
                     <CatIcon className={`w-3.5 h-3.5 ${isSelected ? 'text-[#051712]' : 'text-[#C5A059]'}`} />
@@ -1024,7 +1036,7 @@ export default function HauteCoutureApp() {
                   Real Atelier Catalog is Being Updated
                 </h3>
                 <p className="text-xs sm:text-sm text-gray-300 font-light leading-relaxed">
-                  We are uploading real boutique designs, camera photos, and unstitched/stitched pricing directly from our physical store in Jampur. Place a custom bespoke order or contact our hotline directly.
+                  We are uploading real boutique designs, camera photos, and unstitched/stitched pricing directly from our physical store in Lahore. Place a custom bespoke order or contact our hotline directly.
                 </p>
                 <div className="pt-3 flex flex-wrap items-center justify-center gap-3">
                   <button
@@ -1809,13 +1821,12 @@ export default function HauteCoutureApp() {
                       onChange={(e) => setRegCity(e.target.value)}
                       className="w-full bg-[#051712] border border-[#C5A059]/30 rounded-xl px-3.5 py-2 text-xs text-[#FCFBF7] focus:outline-none focus:border-[#C5A059]"
                     >
-                      <option value="Lahore">Lahore</option>
+                      <option value="Lahore">Lahore (Flagship Atelier)</option>
                       <option value="Karachi">Karachi</option>
                       <option value="Islamabad">Islamabad</option>
                       <option value="Rawalpindi">Rawalpindi</option>
                       <option value="Multan">Multan</option>
                       <option value="Faisalabad">Faisalabad</option>
-                      <option value="Jampur">Jampur (Atelier)</option>
                       <option value="Dera Ghazi Khan">Dera Ghazi Khan</option>
                       <option value="International">Overseas Client (UK / USA / UAE)</option>
                     </select>

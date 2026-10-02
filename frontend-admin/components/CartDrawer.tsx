@@ -58,7 +58,7 @@ export const CartDrawer: React.FC<Props> = ({
   onUpdateQuantity,
   onRemoveItem,
   onClearCart,
-  activeBranchName = 'Main Boutique (Jampur, Pakistan)',
+  activeBranchName = 'Main Flagship Boutique (Lahore, Pakistan)',
   onCheckoutSuccess,
 }) => {
   const { user, isAuthenticated } = useAuth();
@@ -213,7 +213,7 @@ export const CartDrawer: React.FC<Props> = ({
               </div>
               <h4 className="font-serif text-2xl font-bold text-white">Order Confirmed!</h4>
               <p className="text-xs text-gray-300 max-w-xs">
-                Your commission has been registered with our master atelier in Jampur.
+                Your commission has been registered with our master atelier in Lahore.
               </p>
               <div className="p-3 bg-[#072A20] rounded-xl border border-[#C5A059]/40 font-mono text-xs text-[#C5A059]">
                 Order Tracking ID: <strong className="text-white block text-sm mt-0.5">{checkoutCompleteOrder}</strong>
@@ -295,10 +295,9 @@ export const CartDrawer: React.FC<Props> = ({
                     onChange={(e) => setCity(e.target.value)}
                     className="w-full bg-[#072A20] border border-[#C5A059]/30 rounded-xl p-2.5 text-white focus:outline-none focus:border-[#C5A059]"
                   >
-                    <option value="Lahore">Lahore</option>
+                    <option value="Lahore">Lahore (Flagship Atelier Pickup)</option>
                     <option value="Karachi">Karachi</option>
-                    <option value="Islamabad">Islamabad</option>
-                    <option value="Jampur">Jampur (Atelier Pickup)</option>
+                    <option value="Islamabad">Islamabad / Rawalpindi</option>
                     <option value="Multan">Multan</option>
                     <option value="Faisalabad">Faisalabad</option>
                     <option value="Dubai / UAE">Dubai / International</option>
