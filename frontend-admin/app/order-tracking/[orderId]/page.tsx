@@ -47,6 +47,25 @@ export default function OrderTrackingPage({
     Promise.resolve(params).then((resolved) => {
       if (resolved?.orderId) {
         const decoded = decodeURIComponent(resolved.orderId);
+        if (decoded === 'ORD-2026-KTQ') {
+          try {
+            const stored = localStorage.getItem('khadijah_real_orders');
+            if (stored) {
+              const parsed = JSON.parse(stored);
+              if (Array.isArray(parsed) && parsed.length > 0 && (parsed[0].order_number || parsed[0].id)) {
+                const realId = parsed[0].order_number || parsed[0].id;
+                setOrderId(realId);
+                setSearchInput(realId);
+                loadOrder(realId);
+                return;
+              }
+            }
+          } catch (e) {}
+          setOrderId('');
+          setSearchInput('');
+          setLoading(false);
+          return;
+        }
         setOrderId(decoded);
         setSearchInput(decoded);
         loadOrder(decoded);
@@ -167,32 +186,28 @@ export default function OrderTrackingPage({
     <div className="min-h-screen bg-[#051712] text-[#FCFBF7] flex flex-col font-sans">
       <Navbar />
 
-      <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-6 pb-28 lg:py-8 space-y-8">
+      <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 pt-8 pb-28 lg:py-10 space-y-8">
         {/* Back Link & Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#C5A059]/20 pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#C5A059]/20 pb-5">
           <div>
             <Link
               href="/"
-              className="inline-flex items-center gap-2 text-xs text-[#C5A059] hover:underline mb-2 font-medium"
+              className="inline-flex items-center gap-2 text-xs text-[#C5A059] hover:underline mb-2 font-serif uppercase tracking-wider"
             >
-              <ArrowLeft className="w-4 h-4" /> Return to Shop
+              <ArrowLeft className="w-4 h-4" /> Return to Boutique Collection
             </Link>
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full p-0.5 bg-gradient-to-tr from-[#C5A059] via-[#F3E5AB] to-[#99752D] ring-2 ring-[#C5A059]/40 shrink-0 shadow-lg">
-                <img
-                  src="/brand-logo.jpg"
-                  alt="KHADIJAH-TUL-QUBRAH by Meer&Mus"
-                  className="w-full h-full object-cover rounded-full"
-                />
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-[#072A20] border border-[#C5A059]/40 flex items-center justify-center shrink-0 shadow-lg text-[#C5A059]">
+                <Truck className="w-5 h-5 text-[#C5A059]" />
               </div>
               <div>
                 <span className="text-[9px] font-mono font-bold tracking-[0.3em] uppercase text-[#F3E5AB] block mb-0.5">
                   STAY HONEST , STAND LONG
                 </span>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5">
                   <span className={`w-2.5 h-2.5 rounded-full ${orderData ? 'bg-emerald-400 animate-ping' : 'bg-amber-400'}`} />
-                  <h1 className="text-2xl sm:text-3xl font-serif font-bold text-[#FCFBF7]">
-                    {orderData ? `Tracking Order #${orderData.order_number || orderId}` : `Order Lookup`}
+                  <h1 className="text-xl sm:text-2xl font-serif font-bold text-[#FCFBF7]">
+                    {orderData ? `Tracking Order #${orderData.order_number || orderId}` : `Order Lookup & Delivery Status`}
                   </h1>
                 </div>
                 <p className="text-xs text-[#FCFBF7]/70 mt-0.5 font-light">
@@ -219,12 +234,18 @@ export default function OrderTrackingPage({
 
         {/* If Order Not Found: Show Clean Search Bar */}
         {!orderData ? (
-          <div className="bg-[#072A20] rounded-3xl border border-[#C5A059]/30 p-8 sm:p-12 text-center space-y-5">
-            <ShoppingBag className="w-12 h-12 text-[#C5A059] mx-auto opacity-70" />
+          <div className="bg-[#072A20] rounded-3xl border border-[#C5A059]/40 p-6 sm:p-10 text-center space-y-6 shadow-2xl">
+            <div className="w-14 h-14 rounded-full bg-[#051712] border border-[#C5A059]/40 flex items-center justify-center mx-auto text-[#C5A059] shadow-lg">
+              <ShoppingBag className="w-7 h-7 text-[#C5A059]" />
+            </div>
             <div className="max-w-md mx-auto space-y-2">
-              <h2 className="text-xl font-serif font-bold text-white">Order #{orderId || '...'} Not Found</h2>
-              <p className="text-xs text-gray-300">
-                We could not locate this order record in our live database. Please verify your Order Number from your confirmation message.
+              <h2 className="text-xl sm:text-2xl font-serif font-bold text-white">
+                {orderId ? `Order #${orderId} Not Found` : `Track Your Garment Order`}
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-300 leading-relaxed font-sans">
+                {orderId
+                  ? 'We could not locate this order record in our live database. Please check your order number or search again below.'
+                  : 'Enter your Order Number from your confirmation message or receipt to verify live cutting, handwork, and delivery milestones.'}
               </p>
             </div>
 
@@ -236,22 +257,34 @@ export default function OrderTrackingPage({
                   loadOrder(searchInput.trim());
                 }
               }}
-              className="max-w-md mx-auto flex gap-2"
+              className="max-w-md mx-auto flex flex-col sm:flex-row gap-2.5"
             >
               <input
                 type="text"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Enter Order # (e.g. ORD-2026-0001)"
-                className="flex-1 bg-[#051712] border border-[#C5A059]/40 rounded-xl px-4 py-2.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-[#C5A059]"
+                placeholder="Enter Order # (e.g. KTQ-ORD-1001)"
+                className="flex-1 bg-[#051712] border border-[#C5A059]/40 rounded-xl px-4 py-3 text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#C5A059] font-mono shadow-inner"
               />
               <button
                 type="submit"
-                className="px-5 py-2.5 bg-[#C5A059] hover:bg-[#d4af37] text-[#072A20] rounded-xl text-xs font-bold transition shadow"
+                className="px-6 py-3 bg-[#C5A059] hover:bg-[#d4af37] text-[#072A20] rounded-xl text-xs sm:text-sm font-serif font-bold uppercase tracking-wider transition shadow-lg shrink-0"
               >
                 Track Order
               </button>
             </form>
+
+            <div className="pt-4 border-t border-[#C5A059]/20 flex flex-col sm:flex-row items-center justify-center gap-3 text-xs text-gray-400">
+              <span>Need order assistance?</span>
+              <a
+                href="https://wa.me/923359301919?text=Assalam-o-Alaikum%20Khadijah-Tul-Qubrah%20Boutique%2C%20I%20would%20like%20to%20inquire%20about%20my%20order."
+                target="_blank"
+                rel="noreferrer"
+                className="text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1 transition-colors"
+              >
+                <Phone className="w-3.5 h-3.5 fill-emerald-400" /> WhatsApp Direct (+92 335 9301919)
+              </a>
+            </div>
           </div>
         ) : (
           <>

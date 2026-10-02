@@ -112,7 +112,7 @@ export const Navbar: React.FC<Props> = ({
             <span className="text-[#C5A059]/40 font-light">|</span>
 
             <Link
-              href="/order-tracking/ORD-2026-KTQ"
+              href="/order-tracking"
               className="flex items-center gap-1.5 text-white hover:text-[#C5A059] font-bold transition-colors"
               title="Track Order Status in Real-Time"
             >
@@ -219,7 +219,7 @@ export const Navbar: React.FC<Props> = ({
                       </div>
                       <div className="py-1">
                         <Link
-                          href="/order-tracking/ORD-2026-KTQ"
+                          href="/order-tracking"
                           onClick={() => setUserDropdownOpen(false)}
                           className="flex items-center gap-2 px-3 py-1.5 text-gray-300 hover:text-[#C5A059] hover:bg-[#051712] rounded-lg transition-colors"
                         >
@@ -388,7 +388,7 @@ export const Navbar: React.FC<Props> = ({
                   <span>Create Your Own Dress</span>
                 </button>
                 <Link
-                  href="/order-tracking/ORD-2026-KTQ"
+                  href="/order-tracking"
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-[#072A20] text-xs font-semibold"
                 >
@@ -479,7 +479,7 @@ export const Navbar: React.FC<Props> = ({
         </button>
 
         <Link
-          href="/order-tracking/ORD-2026-KTQ"
+          href="/order-tracking"
           className="flex flex-col items-center justify-center py-1 px-2 text-center text-gray-400 hover:text-[#C5A059] transition-colors min-w-[56px]"
         >
           <Truck className="w-4 h-4 mb-0.5" />

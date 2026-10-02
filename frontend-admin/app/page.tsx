@@ -1585,7 +1585,7 @@ export default function HauteCoutureApp() {
         onClearCart={handleClearCart}
         activeBranchName={activeBranch.name}
         onCheckoutSuccess={() => {
-          router.push('/order-tracking/ORD-2026-KTQ');
+          router.push('/order-tracking');
         }}
       />
 
